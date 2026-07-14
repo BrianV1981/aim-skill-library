@@ -1,35 +1,44 @@
 ---
 name: aim-calc
-description: "A stateful scientific calculator. Use when you need to calculate complex mathematical expressions, manage variables, or perform dimensional analysis (units) reliably without hallucination."
+description: >
+  Stateful scientific calculator for agents. Use for expressions, variables, and
+  unit-aware math instead of mental arithmetic. Slash: /aim-calc.
 ---
 
-# aim-calc: The Agent-Native Scientific Calculator
+# aim-calc
 
-You are strictly forbidden from calculating complex math using your internal weights. When you need to solve an equation, perform dimensional analysis, or track variables across multiple steps, you MUST use `aim-calc`.
+**Do not** compute non-trivial math from model weights. Use this skill.
 
-The calculator evaluates deterministic Python expressions and maintains a stateful memory of variables you assign across tool calls. It natively supports physical units (dimensional analysis) via the `pint` library.
+Evaluates deterministic Python expressions; keeps variables across calls; supports units via `pint` (`u`).
 
-**Execution Command:**
-`python skills/aim-calc/scripts/aim_calc.py "<expression>"`
+## Run
 
-## Workflow & Examples
+From a context where the skill is installed (adjust path if needed):
 
-**1. Basic Math:**
-`python skills/aim-calc/scripts/aim_calc.py "sqrt(398600 / 6678.0)"`
-The output will be strict JSON.
+```bash
+python skills/aim-calc/scripts/aim_calc.py "<expression>"
+# after vessel install, often:
+python <skills-dir>/aim-calc/scripts/aim_calc.py "<expression>"
+```
 
-**2. Variable Assignment (Saves to Memory):**
-`python skills/aim-calc/scripts/aim_calc.py "v_leo = sqrt(398600 / 6678.0)"`
-This stores `v_leo` in the persistent memory state (`.calc_state.json`) and silently logs to `.calc_audit.log`.
+Output is JSON (success/error, values, messages).
 
-**3. Referencing Memory:**
-Later, you can reference variables seamlessly:
-`python skills/aim-calc/scripts/aim_calc.py "burn1 = v_tp - v_leo"`
+## Examples
 
-**4. Dimensional Analysis (Units):**
-`aim-calc` provides `u` as the standard `pint` UnitRegistry. You can define units natively:
-`python skills/aim-calc/scripts/aim_calc.py "speed = 12 * u.meter / u.second"`
-`python skills/aim-calc/scripts/aim_calc.py "distance = speed * (2 * u.minute)"`
-`python skills/aim-calc/scripts/aim_calc.py "distance.to(u.km)"`
+```bash
+# Basic
+python …/aim_calc.py "sqrt(398600 / 6678.0)"
 
-All executions return structured JSON containing success/error status, evaluated floats, and actionable error messages/Tracebacks if you make a syntax mistake.
+# Assign (persists in .calc_state.json)
+python …/aim_calc.py "v_leo = sqrt(398600 / 6678.0)"
+
+# Reuse variables
+python …/aim_calc.py "burn1 = v_tp - v_leo"
+
+# Units
+python …/aim_calc.py "speed = 12 * u.meter / u.second"
+python …/aim_calc.py "distance = speed * (2 * u.minute)"
+python …/aim_calc.py "distance.to(u.km)"
+```
+
+State files (`.calc_state.json`, `.calc_audit.log`) are local to the working directory — do not commit them unless the Operator wants them tracked.

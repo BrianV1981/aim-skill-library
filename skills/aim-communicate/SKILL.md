@@ -1,219 +1,115 @@
 ---
 name: aim-communicate
 description: >
-  Inter-agent communication via tmux with permission gates, chalkboard + short-paste
-  protocol (Grok/AGY-hardened). MUST declare sender session and REPLY_TO session on every
-  message. Use when messaging another AI agent in tmux, board-room/swarm chat, or when
-  the user asks to talk to another agent. Updated 2026-07-12 (reply-to routing + Grok submit).
+  Inter-agent messaging via tmux: short paste with FROM/REPLY_TO, vessel-specific
+  submit keys, optional chalkboard file for bulk content. Use when messaging another
+  agent in a tmux session or when the Operator asks you to talk to another agent.
 ---
 
-# AIM-Communicate: Inter-Agent Tmux Protocol
+# aim-communicate
 
-You may operate where multiple AI agents run in different tmux sessions (board room / swarm).
-Common sessions: `aim-agy`, `aim-grok`, `grok-audit`, `aim-connect`, `aim-youtube`, reincarnation vessels (`agy_reincarnation_*`, `grok_reincarnation_*`), etc.
+Protocol for agents in different **tmux sessions** on the same host.
 
----
+## Rules
 
-## 0. MANDATORY: Session identity + reply routing (do not skip)
+1. **Operator approval required** — do not message another agent unless the Operator asked for it.
+2. **Every message declares routing:**
+   - **FROM** — exact tmux session *you* are in now  
+   - **REPLY_TO** — exact session that must receive the reply (usually the orchestrator)
+3. **Session name ≠ project name** — always use `tmux display-message` / `list-sessions`, never invent names.
+4. **No secrets** in pastes. No open-ended agent↔agent chat loops.
 
-**Every inter-agent message MUST state:**
-
-1. **FROM** — the **exact** tmux session **you are running in now**  
-2. **REPLY_TO** — the **exact** tmux session the peer must answer (almost always = the orchestrator’s FROM)  
-
-### 0a. Discover your own session (always run first)
+## Discover sessions
 
 ```bash
-# Preferred (when your pane is the active one in a known session):
-tmux display-message -p '#{session_name}'
-
-# If that is empty/wrong (nested/detached), find by cwd or list:
-tmux list-panes -a -F '#{session_name} #{pane_current_command} #{pane_current_path}'
-```
-
-Record that name. **Do not guess** `aim-grok` vs `grok-audit`. They are different orchestrators.
-
-### 0b. Required short-message envelope
-
-```text
-[FROM:<your_session>] [REPLY_TO:<session_they_must_answer>] [REPORT|DISPATCH from <role>] <one-line body>
-```
-
-**Examples (correct):**
-
-```text
-[FROM:grok-audit] [REPLY_TO:agy_reincarnation_1783842559] [DISPATCH] Merge #92-95 — read /path/DISPATCH.md
-[FROM:agy_reincarnation_1783842559] [REPLY_TO:grok-audit] [REPORT from aim-agy] Merged #92-#95 — read /path/REPORT.md
-```
-
-**Wrong (causes misdelivery):**
-
-```text
-[REPORT from aim-agy] Merged #92-#95 — read /path/REPORT.md
-# Missing REPLY_TO → agent often picks aim-grok by habit while orchestrator is on grok-audit
-```
-
-### 0c. Dispatch files MUST include
-
-In every chalkboard dispatch:
-
-```markdown
-**FROM (sender tmux session):** `grok-audit`
-**REPLY_TO (mandatory reply session):** `grok-audit`
-**Also notify (optional secondary):** `aim-grok`   # only if Operator wants a CC
-```
-
-Peer agents **must** paste reports to **REPLY_TO only** unless Operator adds a CC list.  
-If both `aim-grok` and `grok-audit` are listed, **primary is always REPLY_TO**.
-
-### 0d. Incident (2026-07-12)
-
-Orchestrator on **`grok-audit`** ordered aim-agy to report to `grok-audit`. The agent reported only to **`aim-grok`**, so the live orchestrator did not see the paste. Fix: mandatory `[FROM:…] [REPLY_TO:…]` on every short paste + dispatch header.
-
----
-
-## 1. Permission mandate
-
-You are **forbidden** from unilaterally messaging another agent's tmux session unless the Operator explicitly approves.
-
-- Operator text like "tell aim-agy …" / "communicate with …" **is** approval for that target and intent.
-- Do not open open-ended multi-hop chat without Operator in the loop.
-
-## 2. Discover targets first
-
-```bash
+tmux display-message -p '#{session_name}'   # your session
 tmux list-sessions
 tmux list-panes -a -F '#{session_name} #{pane_current_command} #{pane_current_path}'
 tmux capture-pane -t <session> -p -J -S -20
 ```
 
-Wait for idle prompt when possible.
+Prefer idle peers (stable prompt) before pasting.
 
-| `pane_current_command` | Vessel | Submit |
-|------------------------|--------|--------|
-| `grok` | Grok TUI | **Enter only** (§4a) |
-| `opencode` | OpenCode TUI | **Enter only** (same as Grok; §4a) |
-| `agy` | Antigravity | **Escape, then Enter** (§4b) |
+## Message envelope
 
-**Note:** Project name ≠ session name. An aim-agy agent may run in `agy_reincarnation_*` or `aim-agy`. Always use the **tmux session string**, not the repo name alone.
+```text
+[FROM:<your_session>] [REPLY_TO:<session_to_answer>] [REPORT|DISPATCH] <one-line body>
+```
 
-## 3. Chalkboard + short paste
+Example:
 
-### 3a. Write full content to disk
+```text
+[FROM:my-orchestrator] [REPLY_TO:peer-session] [DISPATCH] Review PR — see planning-artifacts/NOTES.md
+```
 
-Prefer paths under the target or sender project (`planning-artifacts/`, `docs/`).
+Dispatch files (bulk content on disk) should also state **FROM** and **REPLY_TO** in the header. Peers reply to **REPLY_TO** only unless the Operator lists a CC.
 
-### 3b. Helper script (recommended)
+## Short paste (helper)
+
+After install, from the skill directory:
 
 ```bash
-# From this skill after install (relative to skill root):
-bash skills/aim-communicate/scripts/tmux_send.sh \
+bash scripts/tmux_send.sh \
   --target <peer_session> \
   --from "$(tmux display-message -p '#{session_name}')" \
   --reply-to <orchestrator_session> \
-  --message 'Merged #N — read planning-artifacts/REPORT.md'
+  --message 'Short status — full notes in planning-artifacts/REPORT.md'
 ```
 
-The script prefixes `[FROM:…] [REPLY_TO:…]` when missing and uses the correct submit sequence.
+The helper prefixes FROM/REPLY_TO when missing and applies the correct submit sequence.
 
-After `install.sh`, the script lives at:
-
-- `<vessel>/.grok/skills/aim-communicate/scripts/tmux_send.sh`
-- `<vessel>/.gemini/skills/aim-communicate/scripts/tmux_send.sh`
-- `<vessel>/.opencode/skills/aim-communicate/scripts/tmux_send.sh`
-
-### 3c. Manual short paste
+## Manual short paste
 
 ```bash
 FROM=$(tmux display-message -p '#{session_name}')
-REPLY_TO=grok-audit   # from the dispatch — never invent
-SHORT="[FROM:${FROM}] [REPLY_TO:${REPLY_TO}] [REPORT from ${FROM}] Closed #N — read /abs/path/REPORT.md"
+REPLY_TO=<session_from_dispatch>
+SHORT="[FROM:${FROM}] [REPLY_TO:${REPLY_TO}] [REPORT] Closed task — see path/to/REPORT.md"
 
 tmux set-buffer -b aim_comm_short "$SHORT"
 tmux send-keys -t "$REPLY_TO" C-u
 sleep 0.2
 tmux paste-buffer -b aim_comm_short -p -t "$REPLY_TO"
 sleep 0.5
-# vessel-specific submit — §4
+# then submit — see below
 ```
 
-### 3d. Verify delivery
+## Submit by vessel (`pane_current_command`)
+
+| Command | Vessel | Submit |
+|---------|--------|--------|
+| `grok` | Grok TUI | **Enter only** (never Escape first — Esc cancels) |
+| `opencode` | OpenCode TUI | **Enter only** |
+| `agy` | Antigravity | **Escape**, pause, then **Enter** (separate `send-keys`) |
+
+```bash
+# Grok / OpenCode
+tmux send-keys -t <target> Enter
+
+# AGY
+tmux send-keys -t <target> Escape
+sleep 0.3
+tmux send-keys -t <target> Enter
+```
+
+## Verify delivery
 
 ```bash
 sleep 1.2
 tmux capture-pane -t <target> -p -J -S -30 | tail -35
 ```
 
-Grok success: message is a **submitted user turn**, not stuck in composer.  
-AGY success: `Loading...` / tool use.  
-Grok failure: text only in bottom bar → Enter did not fire.
+Success: message is a **submitted** user turn (not stuck in the composer).
 
-## 4. Submit rules (vessel-specific)
+## Bulk content
 
-### 4a. Grok (`grok`) — Enter only
-
-```bash
-tmux send-keys -t <target> Enter
-# optional fallback: C-m
-```
-
-**Never** send Escape before Enter on Grok (Esc clears/cancels; does not send).
-
-### 4b. AGY (`agy`) — Escape then Enter (separate calls)
-
-```bash
-tmux send-keys -t <target> Escape
-sleep 0.3
-tmux send-keys -t <target> Enter
-```
-
-### 4c. Do / Don't
-
-| Do | Don't |
-|----|--------|
-| Declare FROM + REPLY_TO every time | Assume “aim-grok” is the orchestrator |
-| Detect vessel before submit | One submit recipe for all CLIs |
-| `paste-buffer -p` | Long `send-keys` novels |
-| Capture-pane verify | Assume delivery |
-| Write report file first | Rely only on paste |
-
-## 5. Loop prevention
+Write long specs/patches to a file under the project (`planning-artifacts/`, `docs/`).  
+Paste only a one-line pointer + envelope. Structure multi-step replies as:
 
 ```text
-Structure:
-1. AGREED / MERGED (issue #s, SHAs)
-2. DISAGREE / NOTES
+1. DONE / AGREED
+2. NOTES
 3. QUESTIONS
 4. NEXT
-No open-ended chat loop.
 ```
 
-## 6. Host map (re-check live with list-sessions)
-
-| Session | Typical CLI | Typical cwd | Submit |
-|---------|-------------|-------------|--------|
-| `grok-audit` | `grok` | `$VESSEL_ROOT` | Enter |
-| `aim-grok` | `grok` | `$VESSEL_ROOT` | Enter |
-| `aim-agy` | `agy` | `$VESSEL_ROOT` | Esc→Enter |
-| `agy_reincarnation_*` | `agy` | aim-agy worktrees | Esc→Enter |
-| `aim-connect` | `agy` | `$VESSEL_ROOT` | Esc→Enter |
-| `aim-opencode` | `opencode` | `$VESSEL_ROOT` | Enter only |
-
-**Orchestrator on this host often lives in `grok-audit`, not `aim-grok`.** Read REPLY_TO from the dispatch.
-
-OpenCode vessel skill (extra notes):  
-`$VESSEL_ROOT/.opencode/skills/aim-communicate/SKILL.md`
-
-## 7. Anti-patterns
-
-- Reporting to `aim-grok` when REPLY_TO was `grok-audit`  
-- Omitting FROM/REPLY_TO  
-- Using project nickname (`aim-agy`) as session name when you are actually `agy_reincarnation_*`  
-- AGY Escape→Enter on Grok  
-- Secrets in pastes  
-- Force-push / destructive ops without Operator  
-
-## 8. Incident log
-
-1. **2026-07-12 Grok submit:** Escape→Enter left pastes unsent on Grok. Fix: Enter only.  
-2. **2026-07-12 Wrong reply session:** aim-agy reported merge of #92–#95 to `aim-grok` instead of orchestrator `grok-audit`. Fix: mandatory FROM + REPLY_TO (§0).
+No free-form back-and-forth without the Operator.

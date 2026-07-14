@@ -1,23 +1,30 @@
 ---
 name: aim-wiki
 description: >
-  Use the aim-grok persistent memory wiki. Search, process ingest, or bootstrap.
-  Slash: /aim-wiki. Triggers: wiki, memory-wiki, project lore.
+  Persistent memory wiki on A.I.M. vessels: search, process ingest, bootstrap.
+  Slash: /aim-wiki.
 ---
 
-# aim-wiki (aim-grok)
+# aim-wiki
+
+From the vessel project root:
 
 ```bash
-cd /path/to/your/vessel   # or your clone path
 ./aim wiki search "<query>"
-./aim wiki process          # compile _ingest/ → pages/ (deterministic)
-./aim wiki bootstrap        # seed docs + session history into wiki
+./aim wiki process      # compile ingest → pages
+./aim wiki bootstrap    # seed docs / history when supported
 ```
 
-## Workflow
-1. Drop notes into `aim-agy_os/memory-wiki/_ingest/`
-2. Run `./aim wiki process`
-3. Read `aim-agy_os/memory-wiki/index.md` and `pages/`
-4. After `./aim pulse`, summarizer can feed the wiki deterministically
+## Typical workflow
 
-Agent mode (optional): `AIM_WIKI_MODE=agent AIM_WIKI_AGENT=grok ./aim wiki process`
+1. Drop notes into the wiki ingest directory (often under `aim-agy_os/memory-wiki/_ingest/` — confirm on this vessel).  
+2. Run `./aim wiki process`.  
+3. Read `index.md` and `pages/` under the wiki root.  
+
+Optional agent mode (if supported):
+
+```bash
+AIM_WIKI_MODE=agent ./aim wiki process
+```
+
+If a command is missing on this vessel, say so — do not invent wiki state.
