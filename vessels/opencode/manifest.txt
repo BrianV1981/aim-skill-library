@@ -1,0 +1,6 @@
+# Install into: <project>/.opencode/skills/
+aim-communicate
+aim-calc
+aim-memory-search
+aim-list-sessions
+aim-export-cartridge

@@ -1,0 +1,86 @@
+# A.I.M. skill library — skills live under skills/<id>/
+# type: library (body in this repo) | companion (install from other public repo)
+version: 1
+updated: 2026-07-14
+
+skills:
+  - id: aim-communicate
+    type: library
+    description: Inter-agent tmux paste protocol (FROM/REPLY_TO)
+    status: active
+    vessels: [agy, grok, opencode]
+
+  - id: aim-calc
+    type: library
+    description: Stateful scientific calculator (no mental math)
+    status: active
+    vessels: [agy, grok, opencode, codex]
+
+  - id: aim-memory-search
+    type: library
+    description: Engram / hybrid memory search via ./aim
+    status: active
+    vessels: [agy, grok, opencode]
+
+  - id: aim-list-sessions
+    type: library
+    description: List indexed knowledge / recent work via ./aim map
+    status: active
+    vessels: [agy, grok, opencode]
+
+  - id: aim-export-cartridge
+    type: library
+    description: Export Engram/DataJack cartridge
+    status: active
+    vessels: [agy, grok, opencode]
+
+  - id: aim-wiki
+    type: library
+    description: Persistent memory wiki
+    status: active
+    vessels: [grok]
+
+  - id: aim-grok-context
+    type: library
+    description: aim-grok vessel context
+    status: active
+    vessels: [grok]
+
+  - id: aim-technical-auditor
+    type: library
+    description: Architectural review persona
+    status: niche
+    vessels: [agy, grok]
+
+  - id: aim-python-specialist
+    type: library
+    description: TDD-first Python implementer persona
+    status: niche
+    vessels: [agy, grok]
+
+companions:
+  - id: aim-browser-suite
+    type: companion
+    description: Headed Chromium CDP engine + browser skill suite
+    repo: https://github.com/BrianV1981/aim-browser
+    install: "cd aim-browser && npm run install-skills -- <dest> --mode symlink"
+    status: active
+
+  - id: aim-google
+    type: companion
+    description: Google Workspace CLI skill (Gmail/Drive/Calendar/…)
+    repo: https://github.com/BrianV1981/aim-google
+    install: "clone repo; link agent-skill/aim-google into vessel skills dir"
+    status: active
+
+  - id: aim-flight-recorder
+    type: companion
+    description: Forensic Markdown session extractor
+    repo: https://github.com/BrianV1981/aim-flight-recorder
+    status: active
+
+  - id: aim-coagents
+    type: companion
+    description: DNA bank for sovereign co-agent blueprints
+    repo: https://github.com/BrianV1981/aim-coagents
+    status: active
