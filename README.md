@@ -31,16 +31,16 @@
 
 | This repo | Not this repo |
 |-----------|----------------|
-| **`skills/<id>/`** — real `SKILL.md` (+ scripts) | Pointer-only index with `/home/you` paths |
-| Portable `scripts/install.sh` | Machine-local absolute install maps |
-| Per-CLI manifests under `vessels/agy`, `vessels/grok`, `vessels/opencode`, … | One-size dump of every private vertical |
-| Companion list for heavy tools | Vendoring Chromium engines / Workspace CLIs |
+| **`skills/<id>/`** — real `SKILL.md` (+ scripts) | Pointer-only index with machine-local paths |
+| Portable `scripts/install.sh` | Absolute install maps |
+| Per-CLI manifests under `vessels/agy`, `vessels/grok`, `vessels/opencode`, … | One-size dump of every vertical |
+| Featured **companion skills** (browser suite, Workspace, …) | Vendoring Chromium engines into this monorepo |
 
-**Library skills** live here. **Companion tools** (browser suite, Google Workspace, …) stay in their own public repos — see [`docs/COMPANIONS.md`](docs/COMPANIONS.md).
+**Library skills** live here. **Companion skills** ship with heavier tools in their own repos — same desk, deliberate install (see below).
 
 ---
 
-## Quick install
+## Quick install (this library)
 
 ```bash
 git clone https://github.com/BrianV1981/aim-skill-library.git
@@ -49,24 +49,18 @@ cd aim-skill-library
 # Grok vessel
 ./scripts/install.sh --vessel grok --dest /path/to/project/.grok/skills --mode symlink
 
-# aim-agy (Gemini / Antigravity skills dir)
+# aim-agy (Antigravity / Gemini skills dir)
 ./scripts/install.sh --vessel agy --dest /path/to/aim-agy/.gemini/skills --mode symlink
 
 # OpenCode
 ./scripts/install.sh --vessel opencode --dest /path/to/project/.opencode/skills --mode symlink
 ```
 
-Then equip **companions** you need (example — public browser suite):
-
-```bash
-git clone https://github.com/BrianV1981/aim-browser.git
-cd aim-browser && npm install
-npm run install-skills -- /path/to/project/.grok/skills --mode symlink
-```
-
 ---
 
 ## Skills in this library
+
+Installed by `./scripts/install.sh` from the `skills/` tree.
 
 | Skill | Role |
 |-------|------|
@@ -80,20 +74,72 @@ npm run install-skills -- /path/to/project/.grok/skills --mode symlink
 | **aim-technical-auditor** | Architecture review persona |
 | **aim-python-specialist** | TDD Python implementer persona |
 
-Manifests under `vessels/` choose the pack per CLI. Edit manifests freely for your desk.
+Manifests under `vessels/` choose the pack per CLI. Full index: [`registry/skills.yaml`](registry/skills.yaml).
 
-Full index: [`registry/skills.yaml`](registry/skills.yaml).
+---
+
+## Companion skills (other repos)
+
+These are **first-class A.I.M. skills**, but their code lives with the tool that powers them.  
+`install.sh` here does **not** copy them — clone the companion, then install as shown.
+
+### [aim-browser](https://github.com/BrianV1981/aim-browser) — headed CDP + skill suite
+
+Persistent headed Chromium over CDP. Minimized by default; stop after session.
+
+| Skill | Job |
+|-------|-----|
+| **aim-browser** | Full CDP exploration CLI |
+| **aim-google-ai** | Google Search AI Mode (`udm=50`) |
+| **aim-google-web** | Classic SERP / web-only |
+| **aim-google-news** | News headlines |
+| **aim-page-fetch** | URL → main text + meta |
+| **aim-screenshot-url** | URL → PNG proof |
+| **aim-youtube-meta** | YouTube watch-page metadata |
+| **aim-maps-place** | Maps place card extract |
+| **aim-google-ai-chat** | Multi-turn AI Mode |
+| **aim-form-fill** | Allowlisted form fill |
+| **aim-login-hold** | Human login / CAPTCHA hold |
+| **aim-web-diff** | Page text snapshot diff |
+
+```bash
+git clone https://github.com/BrianV1981/aim-browser.git
+cd aim-browser && npm install
+npm run install-skills -- /path/to/project/.grok/skills --mode symlink
+```
+
+### [aim-google](https://github.com/BrianV1981/aim-google) — Workspace CLI
+
+| Skill | Job |
+|-------|-----|
+| **aim-google** | Gmail, Drive, Calendar, Docs, Sheets, Tasks, Chat (API — not browser) |
+
+Clone the repo and link `agent-skill/aim-google` (or that repo’s documented path) into your vessel skills dir.
+
+### [aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)
+
+| Skill | Job |
+|-------|-----|
+| **aim-flight-recorder** | Extract forensic Markdown from CLI sessions |
+
+### [aim-coagents](https://github.com/BrianV1981/aim-coagents)
+
+| Skill | Job |
+|-------|-----|
+| **aim-coagents** | DNA bank / blueprints for sovereign co-agents (equip when spawning peers) |
+
+More install notes: [`docs/COMPANIONS.md`](docs/COMPANIONS.md).
 
 ---
 
 ## Layout
 
 ```text
-skills/                 # skill bodies (source of truth)
+skills/                 # library skill bodies (source of truth)
 vessels/<cli>/manifest.txt
-scripts/install.sh      # symlink or copy into a vessel
+scripts/install.sh      # symlink or copy library skills into a vessel
 registry/skills.yaml    # catalog + companion pointers
-docs/COMPANIONS.md      # heavy tools not vendored here
+docs/COMPANIONS.md      # companion install notes
 ```
 
 ---
@@ -112,7 +158,7 @@ docs/COMPANIONS.md      # heavy tools not vendored here
 ## Design rules
 
 1. **No absolute home-directory paths** in skills or install scripts.  
-2. **No private verticals** (lead ops, site-specific harvest playbooks) in this public library.  
+2. **Public library only** — proprietary vertical playbooks stay out of this repo.  
 3. **Skill body in-repo** or don’t list it as `type: library`.  
 4. **Companions** install from their own repos after clone.  
 
@@ -126,8 +172,36 @@ MIT — fork it, keep it, walk away with the files.
 
 ---
 
-### Related
+<!-- AIM_ECOSYSTEM_START -->
+### 🧬 The A.I.M. Ecosystem
 
-- **[aim-browser](https://github.com/BrianV1981/aim-browser)** — headed CDP + browser skill suite (public)  
-- **[aim-agy](https://github.com/BrianV1981/aim-agy)** — flagship A.I.M. engine vessel  
-- Older private **aim-skills** registry (if present on your account) is superseded by this library for sharing
+Modular A.I.M. (Actual Intelligent Memory) repositories. **Flagship engine: [aim-agy](https://github.com/BrianV1981/aim-agy).**
+
+**Active vessels (CLI hosts):**
+- **[aim-agy](https://github.com/BrianV1981/aim-agy)** — Core engine (Antigravity / post–Gemini-CLI line). *Flagship.*
+- **[aim-grok](https://github.com/BrianV1981/aim-grok)** — Grok CLI vessel (hybrid memory, GitOps, wiki).
+- **[aim-opencode](https://github.com/BrianV1981/aim-opencode)** — OpenCode CLI vessel.
+- **[aim-codex](https://github.com/BrianV1981/aim-codex)** — Codex-native vessel (**on the horizon** — not deprecated).
+
+**Tools & workspaces:**
+- **[aim-connect](https://github.com/BrianV1981/aim-connect)** — Self-hosted remote workspace web UI.
+- **[aim-tmux-dashboard](https://github.com/BrianV1981/aim-tmux-dashboard)** — Terminal multi-session monitor.
+- **[aim-browser](https://github.com/BrianV1981/aim-browser)** — Headed Chromium CDP engine + browser **skill suite**.
+- **[aim-google](https://github.com/BrianV1981/aim-google)** — Google Workspace CLI (Gmail, Drive, Calendar, …).
+- **[aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)** — Forensic Markdown session extractor.
+- **[aim-boardroom](https://github.com/BrianV1981/aim-boardroom)** — Multi-agent orchestration room (OS multiplexing + artifacts).
+- **[aim-skill-library](https://github.com/BrianV1981/aim-skill-library)** — **This repo** — shareable skills + companion index; install into vessels.
+
+**DNA, comms & lore:**
+- **[aim-coagents](https://github.com/BrianV1981/aim-coagents)** — DNA bank for sovereign co-agent blueprints.
+- **[aim-knowledge](https://github.com/BrianV1981/aim-knowledge)** — Public Obsidian vault / deep-lore archive.
+- **[aim-chalkboard](https://github.com/BrianV1981/aim-chalkboard)** — Optional cross-host async git mailbox (PoC; default same-host comms = **aim-communicate** skill).
+
+**Horizon (not deprecated):**
+- **[aim-antigravity](https://github.com/BrianV1981/aim-antigravity)** — IDE-line vessel (neglected since agy CLI; still on the map).
+
+**Deprecated / not maintained:**
+- **[aim](https://github.com/BrianV1981/aim)** — Original **Gemini CLI** framework. Deprecated after loss of practical subscription access; **Great Migration → aim-agy**.
+- **[aim-swarm](https://github.com/BrianV1981/aim-swarm)** — Legacy Python swarm factory → use **aim-coagents** + aim-agy spawn.
+- **aim-claude / Anthropic-line vessels** — **Done.** Operator does not develop against Anthropic. Use aim-agy / aim-grok / aim-opencode (or aim-codex when ready).
+<!-- AIM_ECOSYSTEM_END -->
