@@ -33,7 +33,7 @@
 |-----------|----------------|
 | **`skills/<id>/`** — real `SKILL.md` (+ scripts) | Pointer-only index with `/home/you` paths |
 | Portable `scripts/install.sh` | Machine-local absolute install maps |
-| Per-CLI manifests (`vessels/agy|grok|opencode|…`) | One-size dump of every private vertical |
+| Per-CLI manifests under `vessels/agy`, `vessels/grok`, `vessels/opencode`, … | One-size dump of every private vertical |
 | Companion list for heavy tools | Vendoring Chromium engines / Workspace CLIs |
 
 **Library skills** live here. **Companion tools** (browser suite, Google Workspace, …) stay in their own public repos — see [`docs/COMPANIONS.md`](docs/COMPANIONS.md).
