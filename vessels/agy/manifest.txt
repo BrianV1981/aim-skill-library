@@ -1,8 +1,7 @@
 # Install into: <project>/.gemini/skills/
+# Core library pack — tool skills only (no personas)
 aim-communicate
 aim-calc
 aim-memory-search
 aim-list-sessions
 aim-export-cartridge
-aim-technical-auditor
-aim-python-specialist

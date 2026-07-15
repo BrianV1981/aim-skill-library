@@ -1,4 +1,5 @@
 # Install into: <project>/.grok/skills/  and/or ~/.grok/skills/
+# Core library pack — tool skills only (no personas)
 aim-communicate
 aim-calc
 aim-memory-search
@@ -6,5 +7,3 @@ aim-list-sessions
 aim-export-cartridge
 aim-wiki
 aim-grok-context
-aim-technical-auditor
-aim-python-specialist

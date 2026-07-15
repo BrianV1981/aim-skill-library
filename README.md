@@ -38,6 +38,8 @@
 
 **Library skills** live here. **Companion skills** ship with heavier tools in their own repos — same desk, deliberate install (see below).
 
+**Skills** teach tools. **Personas** teach roles. **Co-agents** are full peers spawned from blueprints — see **[aim-coagents](https://github.com/BrianV1981/aim-coagents)** (`personas/` + `blueprints/`). Personas are **not** installed by this library.
+
 ---
 
 ## Quick install (this library)
@@ -71,8 +73,6 @@ Installed by `./scripts/install.sh` from the `skills/` tree.
 | **aim-export-cartridge** | Export memory cartridge |
 | **aim-wiki** | Memory wiki (Grok-oriented) |
 | **aim-grok-context** | aim-grok vessel context |
-| **aim-technical-auditor** | Architecture review persona |
-| **aim-python-specialist** | TDD Python implementer persona |
 
 Manifests under `vessels/` choose the pack per CLI. Full index: [`registry/skills.yaml`](registry/skills.yaml).
 
@@ -178,22 +178,22 @@ MIT — fork it, keep it, walk away with the files.
 Modular A.I.M. (Actual Intelligent Memory) repositories. **Flagship engine: [aim-agy](https://github.com/BrianV1981/aim-agy).**
 
 **Active vessels (CLI hosts):**
-- **[aim-agy](https://github.com/BrianV1981/aim-agy)** — Core engine (Antigravity / post–Gemini-CLI line). *Flagship.*
-- **[aim-grok](https://github.com/BrianV1981/aim-grok)** — Grok CLI vessel (hybrid memory, GitOps, wiki).
+- **[aim-agy](https://github.com/BrianV1981/aim-agy)** — Core engine (Antigravity / post–Gemini-CLI line). *Flagship.* Memory, GitOps, `./aim`, co-agent spawn.
+- **[aim-grok](https://github.com/BrianV1981/aim-grok)** — Grok CLI vessel (same engine DNA, Grok host).
 - **[aim-opencode](https://github.com/BrianV1981/aim-opencode)** — OpenCode CLI vessel.
 - **[aim-codex](https://github.com/BrianV1981/aim-codex)** — Codex-native vessel (**on the horizon** — not deprecated).
 
 **Tools & workspaces:**
-- **[aim-connect](https://github.com/BrianV1981/aim-connect)** — Self-hosted remote workspace web UI.
+- **[aim-connect](https://github.com/BrianV1981/aim-connect)** — Self-hosted remote workspace web UI (tmux panes in the browser).
 - **[aim-tmux-dashboard](https://github.com/BrianV1981/aim-tmux-dashboard)** — Terminal multi-session monitor.
 - **[aim-browser](https://github.com/BrianV1981/aim-browser)** — Headed Chromium CDP engine + browser **skill suite**.
 - **[aim-google](https://github.com/BrianV1981/aim-google)** — Google Workspace CLI (Gmail, Drive, Calendar, …).
 - **[aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)** — Forensic Markdown session extractor.
 - **[aim-boardroom](https://github.com/BrianV1981/aim-boardroom)** — Multi-agent orchestration room (OS multiplexing + artifacts).
-- **[aim-skill-library](https://github.com/BrianV1981/aim-skill-library)** — **This repo** — shareable skills + companion index; install into vessels.
+- **[aim-skill-library](https://github.com/BrianV1981/aim-skill-library)** — **This repo** — shareable **tool skills** (communicate, calc, memory, …) + companion index.
 
 **DNA, comms & lore:**
-- **[aim-coagents](https://github.com/BrianV1981/aim-coagents)** — DNA bank for sovereign co-agent blueprints.
+- **[aim-coagents](https://github.com/BrianV1981/aim-coagents)** — DNA bank: **personas** (roles) + **blueprints** (sovereign co-agents).
 - **[aim-knowledge](https://github.com/BrianV1981/aim-knowledge)** — Public Obsidian vault / deep-lore archive.
 - **[aim-chalkboard](https://github.com/BrianV1981/aim-chalkboard)** — Optional cross-host async git mailbox (PoC; default same-host comms = **aim-communicate** skill).
 

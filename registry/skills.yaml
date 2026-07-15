@@ -1,5 +1,6 @@
 # A.I.M. skill library — skills live under skills/<id>/
-# type: library (body in this repo) | companion (install from other public repo)
+# type: library | companion
+# Personas (roles) live in aim-coagents/personas — not here.
 version: 1
 updated: 2026-07-14
 
@@ -18,7 +19,7 @@ skills:
 
   - id: aim-memory-search
     type: library
-    description: Engram / hybrid memory search via ./aim
+    description: Engram / hybrid search via ./aim
     status: active
     vessels: [agy, grok, opencode]
 
@@ -46,18 +47,6 @@ skills:
     status: active
     vessels: [grok]
 
-  - id: aim-technical-auditor
-    type: library
-    description: Architectural review persona
-    status: niche
-    vessels: [agy, grok]
-
-  - id: aim-python-specialist
-    type: library
-    description: TDD-first Python implementer persona
-    status: niche
-    vessels: [agy, grok]
-
 companions:
   - id: aim-browser-suite
     type: companion
@@ -81,6 +70,6 @@ companions:
 
   - id: aim-coagents
     type: companion
-    description: DNA bank for sovereign co-agent blueprints
+    description: DNA bank — co-agent blueprints + personas (roles)
     repo: https://github.com/BrianV1981/aim-coagents
     status: active
