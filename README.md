@@ -151,7 +151,7 @@ docs/COMPANIONS.md      # companion install notes
 | **agy** | Antigravity / aim-agy | `.gemini/skills/` |
 | **grok** | Grok CLI | `.grok/skills/` |
 | **opencode** | OpenCode | `.opencode/skills/` |
-| **codex** | Codex (horizon) | stub manifest |
+| **codex** | Codex CLI | Active — greenfield vessel + overlays |
 
 ---
 
