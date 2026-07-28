@@ -1,24 +1,15 @@
 ---
 name: aim-list-sessions
 description: >
-  List indexed knowledge and recent vessel state via ./aim map (and related
-  status commands). Slash: /aim-list-sessions.
+  List indexed knowledge / recent work via ./aim map on aim-grok. Slash: /aim-list-sessions.
 ---
 
-# aim-list-sessions
-
-From the vessel project root:
+# aim-list-sessions (aim-grok)
 
 ```bash
+cd $PROJECT_ROOT
 ./aim map
 ./aim doctor
 ```
 
-Useful companions:
-
-```bash
-git log --oneline -20
-# Grok CLI transcripts (if using Grok): ~/.grok/sessions/
-```
-
-Report a short inventory: what memory/index exists, health notes from `doctor`, recent code history if relevant.
+Also: `git log --oneline -20` for code history; Grok transcripts under `~/.grok/sessions/`.
