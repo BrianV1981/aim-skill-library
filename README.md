@@ -72,6 +72,7 @@ Installed by `./scripts/install.sh` from the `skills/` tree.
 | **aim-list-sessions** | Map / list indexed work |
 | **aim-export-cartridge** | Export memory cartridge |
 | **aim-memory-wiki** | Interactive session ingest into `memory-wiki/` (all vessels; replaces deprecated `aim-wiki`) |
+| **aim-handoff** | Ephemeral Engineering Handoff (sections 0–9) + optional tmux baton |
 | **aim-grok-context** | aim-grok vessel context |
 
 Manifests under `vessels/` choose the pack per CLI. Full index: [`registry/skills.yaml`](registry/skills.yaml).

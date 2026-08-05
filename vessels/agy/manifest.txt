@@ -6,3 +6,4 @@ aim-memory-search
 aim-list-sessions
 aim-export-cartridge
 aim-memory-wiki
+aim-handoff

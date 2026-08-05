@@ -41,6 +41,13 @@ skills:
     status: active
     vessels: [agy, grok, opencode]
 
+
+  - id: aim-handoff
+    type: library
+    description: Ephemeral Engineering Handoff (gold-standard sections 0–9) + optional tmux baton pass
+    status: active
+    vessels: [agy, grok, opencode]
+
   - id: aim-grok-context
     type: library
     description: aim-grok vessel context
