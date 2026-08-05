@@ -8,3 +8,4 @@ aim-export-cartridge
 aim-memory-wiki
 aim-grok-context
 aim-handoff
+aim-bwrap-forge
