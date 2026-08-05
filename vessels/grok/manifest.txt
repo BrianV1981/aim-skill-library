@@ -5,5 +5,5 @@ aim-calc
 aim-memory-search
 aim-list-sessions
 aim-export-cartridge
-aim-wiki
+aim-memory-wiki
 aim-grok-context

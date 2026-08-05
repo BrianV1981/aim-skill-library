@@ -71,7 +71,7 @@ Installed by `./scripts/install.sh` from the `skills/` tree.
 | **aim-memory-search** | Engram / hybrid search via `./aim` |
 | **aim-list-sessions** | Map / list indexed work |
 | **aim-export-cartridge** | Export memory cartridge |
-| **aim-wiki** | Memory wiki (Grok-oriented) |
+| **aim-memory-wiki** | Interactive session ingest into `memory-wiki/` (all vessels; replaces deprecated `aim-wiki`) |
 | **aim-grok-context** | aim-grok vessel context |
 
 Manifests under `vessels/` choose the pack per CLI. Full index: [`registry/skills.yaml`](registry/skills.yaml).
