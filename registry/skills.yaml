@@ -2,7 +2,7 @@
 # type: library | companion
 # Personas (roles) live in aim-coagents/personas — not here.
 version: 1
-updated: 2026-08-05
+updated: 2026-08-10
 
 skills:
   - id: aim-communicate
@@ -41,7 +41,6 @@ skills:
     status: active
     vessels: [agy, grok, opencode]
 
-
   - id: aim-handoff
     type: library
     description: Ephemeral Engineering Handoff (gold-standard sections 0–9) + optional tmux baton pass
@@ -50,9 +49,21 @@ skills:
 
   - id: aim-grok-context
     type: library
-    description: aim-grok vessel context
+    description: aim-grok vessel context (Grok-only pack membership)
     status: active
     vessels: [grok]
+
+  - id: aim-bwrap-forge
+    type: library
+    description: bubblewrap sandbox forge + optional tmux co-agent isolation
+    status: active
+    vessels: [agy, grok, opencode, codex]
+
+  - id: aim-mega-guide
+    type: library
+    description: Single-source Mega Guide / SOP pipeline from long-form video transcript
+    status: active
+    vessels: [agy, grok, opencode]
 
 companions:
   - id: aim-browser-suite

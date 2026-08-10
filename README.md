@@ -73,9 +73,19 @@ Installed by `./scripts/install.sh` from the `skills/` tree.
 | **aim-export-cartridge** | Export memory cartridge |
 | **aim-memory-wiki** | Interactive session ingest into `memory-wiki/` (all vessels; replaces deprecated `aim-wiki`) |
 | **aim-handoff** | Ephemeral Engineering Handoff (sections 0–9) + optional tmux baton |
-| **aim-grok-context** | aim-grok vessel context |
+| **aim-grok-context** | aim-grok vessel context (**Grok pack only**) |
+| **aim-bwrap-forge** | bubblewrap sandbox forge + optional tmux isolation |
+| **aim-mega-guide** | Single-source Mega Guide / SOP from long-form transcript |
 
 Manifests under `vessels/` choose the pack per CLI. Full index: [`registry/skills.yaml`](registry/skills.yaml).
+
+**Dual vessel skills (Grok + AGY):** do **not** strip AGY paths or tool names when improving Grok compatibility. See [`docs/VESSEL_DUAL_COMPAT.md`](docs/VESSEL_DUAL_COMPAT.md).
+
+### Tests
+
+```bash
+python3 -m unittest tests.test_skill_compat -v
+```
 
 ---
 
@@ -162,6 +172,8 @@ docs/COMPANIONS.md      # companion install notes
 2. **Public library only** — proprietary vertical playbooks stay out of this repo.  
 3. **Skill body in-repo** or don’t list it as `type: library`.  
 4. **Companions** install from their own repos after clone.  
+5. **Dual vessel** — Grok improvements must preserve AGY tool names/paths (or use an overlay). See [`docs/VESSEL_DUAL_COMPAT.md`](docs/VESSEL_DUAL_COMPAT.md).  
+6. **Directory name = frontmatter `name`** (no `*.skill` suffixes).  
 
 ---
 

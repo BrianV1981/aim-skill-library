@@ -123,7 +123,16 @@ Prefer paths under the target or sender project (`planning-artifacts/`, `docs/`)
 ```bash
 # Auto-detect FROM session; force REPLY_TO into the message prefix if missing.
 # Exits 0 only if target tmux pane verification passes; exits 2 on VERIFY_FAIL.
-bash $PROJECT_ROOT/.gemini/skills/aim-communicate/scripts/tmux_send.sh \
+#
+# Grok vessel (preferred when pane_current_command is grok):
+bash "$PROJECT_ROOT/.grok/skills/aim-communicate/scripts/tmux_send.sh" \
+  --target ayrianna-scraper \
+  --from "$(tmux display-message -p '#{session_name}')" \
+  --reply-to grok-audit \
+  --message 'Merged #92-#95 — read /abs/path/REPORT.md'
+
+# AGY / Antigravity vessel (when skills live under .gemini):
+bash "$PROJECT_ROOT/.gemini/skills/aim-communicate/scripts/tmux_send.sh" \
   --target ayrianna-scraper \
   --from "$(tmux display-message -p '#{session_name}')" \
   --reply-to grok-audit \
@@ -138,11 +147,12 @@ The script:
 4. Retries submit once/twice if needed  
 5. **Exits non-zero if verification fails** — you must treat that as “not sent”
 
-Canonical script path (keep vessels in sync):
+Canonical script path (keep vessels in sync — **do not delete either**):
 
-- `$PROJECT_ROOT/.grok/skills/aim-communicate/scripts/tmux_send.sh`
-- `$PROJECT_ROOT/.gemini/skills/aim-communicate/scripts/tmux_send.sh`
+- `$PROJECT_ROOT/.grok/skills/aim-communicate/scripts/tmux_send.sh` — Grok
+- `$PROJECT_ROOT/.gemini/skills/aim-communicate/scripts/tmux_send.sh` — AGY
 - `~/.gemini/antigravity-cli/skills/aim-communicate/scripts/tmux_send.sh` (if universally installed)
+- `~/.grok/skills/aim-communicate/scripts/tmux_send.sh` (user-global Grok)
 
 ### 3c. Manual short paste (only if script unavailable)
 

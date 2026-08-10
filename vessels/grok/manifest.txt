@@ -9,3 +9,4 @@ aim-memory-wiki
 aim-grok-context
 aim-handoff
 aim-bwrap-forge
+aim-mega-guide

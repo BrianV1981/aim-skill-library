@@ -41,7 +41,14 @@ Your Mega Guide MUST follow this strict, unvarying structure to ensure consisten
    * Embed the single source YouTube video at the top or bottom of the guide for reference using standard Markdown link format (e.g., `[Watch the Original Masterclass](https://www.youtube.com/watch?v=VIDEO_ID)`).
 
 ### Phase 3: Aesthetic Superiority
-1. Generate **1 to 2 brand new, highly professional graphics** to embed within the guide using the `generate_image` tool to break up the text.
+1. Generate **1 to 2 brand new, highly professional graphics** to embed within the guide to break up the text. Use the **host vessel’s** image tool:
+
+   | Vessel | Image generation tool |
+   |--------|------------------------|
+   | **Grok CLI** | `image_gen` (edits: `image_edit`) |
+   | **AGY / other** | `generate_image` (or the host’s equivalent image tool) |
+
+   Do not call a tool name that does not exist on your host. Prefer dual-aware wording when documenting skills; never strip either column.
 2. Ensure the imagery matches the aesthetic of the target brand or the tone of the subject matter. Enforce "hyper-realistic" and "premium" in your prompts. No stock photo aesthetics.
 
 ---
