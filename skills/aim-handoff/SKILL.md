@@ -35,7 +35,8 @@ Do not confuse precompact (when/why to write under token pressure) with this ski
 
 ## 2. Gold-standard template (numbered sections)
 
-Canonical example in the LeadDeed monorepo: `/home/kingb/aim-ld/LD-CLAUDE_HANDOFF.md`.
+Canonical shape: gold-standard Engineering Handoff with numbered sections **0–9**
+(LeadDeed-style `LD-CLAUDE_HANDOFF.md` when that project uses it; otherwise `HANDOFF.md`).
 
 When instructed to prepare a handoff, generate or **update** a structured markdown file
 (e.g. `HANDOFF.md` or project-specific `LD-CLAUDE_HANDOFF.md`) with **all** of the following

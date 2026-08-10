@@ -13,15 +13,21 @@ Evaluates deterministic Python expressions; keeps variables across calls; suppor
 
 ## Run
 
-From a context where the skill is installed (adjust path if needed):
+From a context where the skill is installed (pick the path for your vessel):
 
 ```bash
+# library checkout (before install)
 python skills/aim-calc/scripts/aim_calc.py "<expression>"
-# after vessel install, often:
-python <skills-dir>/aim-calc/scripts/aim_calc.py "<expression>"
+
+# after vessel install — Grok
+python "$PROJECT_ROOT/.grok/skills/aim-calc/scripts/aim_calc.py" "<expression>"
+# or user-global: ~/.grok/skills/aim-calc/scripts/aim_calc.py
+
+# after vessel install — AGY / Antigravity
+python "$PROJECT_ROOT/.gemini/skills/aim-calc/scripts/aim_calc.py" "<expression>"
 ```
 
-Output is JSON (success/error, values, messages).
+Optional dependency: `pint` for unit-aware math (`u`). Output is JSON (success/error, values, messages).
 
 ## Examples
 

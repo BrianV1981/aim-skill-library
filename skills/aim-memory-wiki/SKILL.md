@@ -42,5 +42,15 @@ Always ensure:
 - Your summaries are precise and dense with signal, free of conversational filler. 
 
 ## 6. EXECUTION
-Proceed by explicitly generating your proposed memory updates for the user to review, or immediately begin writing to the `memory-wiki/` directory depending on the user's prompt. 
-Use your file system editing tools (`replace_file_content`, `write_to_file`, `multi_replace_file_content`) to methodically apply the changes.
+Proceed by explicitly generating your proposed memory updates for the user to review, or immediately begin writing to the `memory-wiki/` directory depending on the user's prompt.
+
+### Vessel file tools (dual — do not strip either host)
+
+Use the file tools of the **host CLI you are running in**. Both columns remain valid; never replace one host's tools with the other when editing this skill.
+
+| Vessel | Read | Create / overwrite | Edit in place |
+|--------|------|--------------------|---------------|
+| **Grok CLI** | `read_file` | `write` | `search_replace` |
+| **AGY / Antigravity** | host read tools | `write_to_file` | `replace_file_content`, `multi_replace_file_content` |
+
+Methodically apply wiki updates with the tools for your vessel. Prefer small, surgical edits over whole-file rewrites when updating existing pages.
