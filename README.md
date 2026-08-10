@@ -9,6 +9,7 @@
 |--|--|
 | **Own your stack.** | Skills you can copy, fork, and keep when a vendor moves the goalposts. |
 | **Ask, don’t thrash.** | Playbooks that tell agents *how* to work — not blind thrash loops. |
+| **Dual vessel.** | **Grok CLI** and **AGY** packs; Grok improvements must not strip AGY tools/paths. |
 
 ---
 
@@ -32,9 +33,9 @@
 | This repo | Not this repo |
 |-----------|----------------|
 | **`skills/<id>/`** — real `SKILL.md` (+ scripts) | Pointer-only index with machine-local paths |
-| Portable `scripts/install.sh` | Absolute install maps |
+| Portable `scripts/install.sh` | Absolute install maps / hardcoded home usernames |
 | Per-CLI manifests under `vessels/agy`, `vessels/grok`, `vessels/opencode`, … | One-size dump of every vertical |
-| Featured **companion skills** (browser suite, Workspace, …) | Vendoring Chromium engines into this monorepo |
+| Featured **companion skills** (browser suite, Workspace, flight recorder, …) | Vendoring Chromium engines into this monorepo |
 
 **Library skills** live here. **Companion skills** ship with heavier tools in their own repos — same desk, deliberate install (see below).
 
@@ -44,42 +45,52 @@
 
 ## Quick install (this library)
 
+Paths are **portable** — use your project root or `~`. Do **not** hardcode machine usernames or `/home/<user>/…`.
+
 ```bash
 git clone https://github.com/BrianV1981/aim-skill-library.git
 cd aim-skill-library
 
-# Grok vessel
-./scripts/install.sh --vessel grok --dest /path/to/project/.grok/skills --mode symlink
+# Grok vessel (project-local)
+./scripts/install.sh --vessel grok --dest "${PROJECT_ROOT:-.}/.grok/skills" --mode symlink
+# or user-global:  --dest "$HOME/.grok/skills"
 
-# aim-agy (Antigravity / Gemini skills dir)
-./scripts/install.sh --vessel agy --dest /path/to/aim-agy/.gemini/skills --mode symlink
+# AGY / Antigravity (project-local)
+./scripts/install.sh --vessel agy --dest "${PROJECT_ROOT:-.}/.gemini/skills" --mode symlink
+# or AGY CLI skills: --dest "$HOME/.gemini/antigravity-cli/skills"
 
 # OpenCode
-./scripts/install.sh --vessel opencode --dest /path/to/project/.opencode/skills --mode symlink
+./scripts/install.sh --vessel opencode --dest "${PROJECT_ROOT:-.}/.opencode/skills" --mode symlink
 ```
+
+`--mode symlink` (default) or `copy`. Ensure the host CLI scans that skills directory.
 
 ---
 
 ## Skills in this library
 
-Installed by `./scripts/install.sh` from the `skills/` tree.
+Installed by `./scripts/install.sh` from the `skills/` tree. Pack membership is per vessel (`vessels/<cli>/manifest.txt`).
 
-| Skill | Role |
-|-------|------|
-| **aim-communicate** | Inter-agent tmux protocol (`FROM` / `REPLY_TO`) |
-| **aim-calc** | Stateful scientific calculator |
-| **aim-memory-search** | Engram / hybrid search via `./aim` |
-| **aim-list-sessions** | Map / list indexed work |
-| **aim-export-cartridge** | Export memory cartridge |
-| **aim-memory-wiki** | Interactive session ingest into `memory-wiki/` (all vessels; replaces deprecated `aim-wiki`) |
-| **aim-handoff** | Ephemeral Engineering Handoff (sections 0–9) + optional tmux baton |
-| **aim-grok-context** | aim-grok vessel context (**Grok pack only**) |
-| **aim-bwrap-forge** | bubblewrap sandbox forge + optional tmux isolation |
-| **aim-mega-guide** | Single-source Mega Guide / SOP from long-form transcript |
+| Skill | Role | Typical vessels |
+|-------|------|-----------------|
+| **aim-communicate** | Inter-agent tmux protocol (`FROM` / `REPLY_TO`) | agy, grok, opencode |
+| **aim-calc** | Stateful scientific calculator | agy, grok, opencode, codex |
+| **aim-memory-search** | Engram / hybrid search via `./aim` | agy, grok, opencode |
+| **aim-list-sessions** | Map / list indexed work | agy, grok, opencode |
+| **aim-export-cartridge** | Export memory cartridge | agy, grok, opencode |
+| **aim-memory-wiki** | Session ingest into `memory-wiki/` (replaces deprecated `aim-wiki`) | agy, grok, opencode |
+| **aim-handoff** | Ephemeral Engineering Handoff (sections 0–9) + optional tmux baton | agy, grok, opencode |
+| **aim-grok-context** | aim-grok vessel context | **grok only** |
+| **aim-bwrap-forge** | bubblewrap sandbox forge + optional tmux isolation | agy, grok, opencode, codex |
+| **aim-mega-guide** | Single-source Mega Guide / SOP from long-form transcript | agy, grok, opencode |
 
-Manifests under `vessels/` choose the pack per CLI. Full index: [`registry/skills.yaml`](registry/skills.yaml).
+Full catalog: [`registry/skills.yaml`](registry/skills.yaml).
 
-**Dual vessel skills (Grok + AGY):** do **not** strip AGY paths or tool names when improving Grok compatibility. See [`docs/VESSEL_DUAL_COMPAT.md`](docs/VESSEL_DUAL_COMPAT.md).
+### Dual vessel (Grok + AGY)
+
+- Host-specific tools are documented **side by side** (e.g. Grok `search_replace` / `write` and AGY `replace_file_content` / `write_to_file`).
+- **Do not** strip AGY paths or tool names when improving Grok compatibility.
+- Policy: [`docs/VESSEL_DUAL_COMPAT.md`](docs/VESSEL_DUAL_COMPAT.md).
 
 ### Tests
 
@@ -87,16 +98,15 @@ Manifests under `vessels/` choose the pack per CLI. Full index: [`registry/skill
 python3 -m unittest tests.test_skill_compat -v
 ```
 
+Guards: valid frontmatter, portable paths (no machine-local homes), dual tools where required, registry/manifest parity, install smoke for **grok** and **agy**.
+
 ---
 
 ## Companion skills (other repos)
 
-These are **first-class A.I.M. skills**, but their code lives with the tool that powers them.  
-`install.sh` here does **not** copy them — clone the companion, then install as shown.
+First-class A.I.M. skills whose code lives with the tool. `install.sh` here does **not** copy them — clone the companion, then install as that repo documents.
 
 ### [aim-browser](https://github.com/BrianV1981/aim-browser) — headed CDP + skill suite
-
-Persistent headed Chromium over CDP. Minimized by default; stop after session.
 
 | Skill | Job |
 |-------|-----|
@@ -116,7 +126,7 @@ Persistent headed Chromium over CDP. Minimized by default; stop after session.
 ```bash
 git clone https://github.com/BrianV1981/aim-browser.git
 cd aim-browser && npm install
-npm run install-skills -- /path/to/project/.grok/skills --mode symlink
+npm run install-skills -- "${PROJECT_ROOT:-.}/.grok/skills" --mode symlink
 ```
 
 ### [aim-google](https://github.com/BrianV1981/aim-google) — Workspace CLI
@@ -125,18 +135,27 @@ npm run install-skills -- /path/to/project/.grok/skills --mode symlink
 |-------|-----|
 | **aim-google** | Gmail, Drive, Calendar, Docs, Sheets, Tasks, Chat (API — not browser) |
 
-Clone the repo and link `agent-skill/aim-google` (or that repo’s documented path) into your vessel skills dir.
+Clone the repo and link that repo’s skill path into your vessel skills dir (see its README).
 
-### [aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)
+### [aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder) — dual vessel
 
 | Skill | Job |
 |-------|-----|
-| **aim-flight-recorder** | Extract forensic Markdown from CLI sessions |
+| **aim-flight-recorder** | Forensic Markdown from **AGY** brain JSONL **and** **Grok** `updates.jsonl` |
+
+```bash
+git clone https://github.com/BrianV1981/aim-flight-recorder.git
+cd aim-flight-recorder
+# Grok
+mkdir -p "${HOME}/.grok/skills" && ln -sfn "$(pwd)" "${HOME}/.grok/skills/aim-flight-recorder"
+# AGY
+mkdir -p "${HOME}/.gemini/antigravity-cli/skills" && ln -sfn "$(pwd)" "${HOME}/.gemini/antigravity-cli/skills/aim-flight-recorder"
+```
 
 ### [aim-coagents](https://github.com/BrianV1981/aim-coagents)
 
-| Skill | Job |
-|-------|-----|
+| Skill / pack | Job |
+|--------------|-----|
 | **aim-coagents** | DNA bank / blueprints for sovereign co-agents (equip when spawning peers) |
 
 More install notes: [`docs/COMPANIONS.md`](docs/COMPANIONS.md).
@@ -146,11 +165,13 @@ More install notes: [`docs/COMPANIONS.md`](docs/COMPANIONS.md).
 ## Layout
 
 ```text
-skills/                 # library skill bodies (source of truth)
-vessels/<cli>/manifest.txt
-scripts/install.sh      # symlink or copy library skills into a vessel
-registry/skills.yaml    # catalog + companion pointers
-docs/COMPANIONS.md      # companion install notes
+skills/                      # library skill bodies (source of truth)
+vessels/<cli>/manifest.txt   # pack per host CLI
+scripts/install.sh           # symlink or copy library skills into a vessel
+registry/skills.yaml         # catalog + companion pointers
+docs/COMPANIONS.md           # companion install notes
+docs/VESSEL_DUAL_COMPAT.md   # Grok + AGY dual-compat rules
+tests/test_skill_compat.py   # portability + install smoke
 ```
 
 ---
@@ -159,16 +180,16 @@ docs/COMPANIONS.md      # companion install notes
 
 | Vessel | Host CLI | Typical skills path |
 |--------|----------|---------------------|
-| **agy** | Antigravity / aim-agy | `.gemini/skills/` |
-| **grok** | Grok CLI | `.grok/skills/` |
-| **opencode** | OpenCode | `.opencode/skills/` |
-| **codex** | Codex CLI | Active — greenfield vessel + overlays |
+| **agy** | Antigravity / aim-agy | `<project>/.gemini/skills/` or `~/.gemini/antigravity-cli/skills/` |
+| **grok** | Grok CLI | `<project>/.grok/skills/` or `~/.grok/skills/` |
+| **opencode** | OpenCode | `<project>/.opencode/skills/` |
+| **codex** | Codex CLI | Greenfield vessel + overlays (subset pack) |
 
 ---
 
 ## Design rules
 
-1. **No absolute home-directory paths** in skills or install scripts.  
+1. **No absolute home-directory paths** and **no machine usernames** in skills, install scripts, or docs. Use `$HOME`, `~`, `$PROJECT_ROOT`, or relative paths.  
 2. **Public library only** — proprietary vertical playbooks stay out of this repo.  
 3. **Skill body in-repo** or don’t list it as `type: library`.  
 4. **Companions** install from their own repos after clone.  
@@ -201,7 +222,7 @@ Modular A.I.M. (Actual Intelligent Memory) repositories. **Flagship engine: [aim
 - **[aim-tmux-dashboard](https://github.com/BrianV1981/aim-tmux-dashboard)** — Terminal multi-session monitor.
 - **[aim-browser](https://github.com/BrianV1981/aim-browser)** — Headed Chromium CDP engine + browser **skill suite**.
 - **[aim-google](https://github.com/BrianV1981/aim-google)** — Google Workspace CLI (Gmail, Drive, Calendar, …).
-- **[aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)** — Forensic Markdown session extractor.
+- **[aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)** — Forensic Markdown session extractor (AGY + Grok).
 - **[aim-boardroom](https://github.com/BrianV1981/aim-boardroom)** — Multi-agent orchestration room (OS multiplexing + artifacts).
 - **[aim-skill-library](https://github.com/BrianV1981/aim-skill-library)** — **This repo** — shareable **tool skills** (communicate, calc, memory, …) + companion index.
 
