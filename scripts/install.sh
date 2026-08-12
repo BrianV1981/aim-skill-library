@@ -57,6 +57,13 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     continue
   fi
   target="$DEST/$id"
+  
+  # Auto-remove legacy .skill directories to prevent shadowing
+  if [[ -d "${target}.skill" || -L "${target}.skill" ]]; then
+    rm -rf "${target}.skill"
+    echo "clean  ${target}.skill (removed legacy directory)"
+  fi
+  
   src_real=$(readlink -f "$src" 2>/dev/null || realpath "$src")
   tgt_real=$(readlink -f "$target" 2>/dev/null || true)
   if [[ -n "${tgt_real:-}" && "$src_real" == "$tgt_real" ]]; then
