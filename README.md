@@ -162,12 +162,24 @@ More install notes: [`docs/COMPANIONS.md`](docs/COMPANIONS.md).
 
 ---
 
+## Base + Override Architecture
+
+To prevent massive duplication, this library uses a **Base + Override** architecture:
+
+1. **Global Base (`skills/`)**: All tool skills default to this directory. If a skill's instructions apply universally across all harnesses (e.g., `aim-memory-wiki`), it lives here.
+2. **Vessel Overrides (`vessels/<cli>/skills/`)**: If a specific vessel requires uniquely tailored mechanics (e.g., `aim-handoff` needing different CLI commands for SQLite vs JSONL), a vessel-specific copy is placed here.
+
+When executing `scripts/install.sh`, the installer seamlessly checks for a vessel-specific override first. If none exists, it securely falls back to symlinking the universal global skill.
+
+---
+
 ## Layout
 
 ```text
-skills/                      # library skill bodies (source of truth)
+skills/                      # library skill bodies (source of truth, global base)
 vessels/<cli>/manifest.txt   # pack per host CLI
-scripts/install.sh           # symlink or copy library skills into a vessel
+vessels/<cli>/skills/        # vessel-specific skill overrides (takes precedence)
+scripts/install.sh           # symlink or copy library skills into a vessel (checks overrides first)
 registry/skills.yaml         # catalog + companion pointers
 docs/COMPANIONS.md           # companion install notes
 docs/VESSEL_DUAL_COMPAT.md   # Grok + AGY dual-compat rules
