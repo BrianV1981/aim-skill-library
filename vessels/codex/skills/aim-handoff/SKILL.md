@@ -8,8 +8,6 @@ description: >
 
 # `aim-handoff`
 
-> **⚠️ CRITICAL PREREQUISITE:** Have you run `/aim-memory-wiki`? Before initiating a handoff, always ensure the latest architectural decisions and context have been synthesized into the memory wiki first.
-
 > **MANDATE:** Package tactical working memory into a standardized Engineering Handoff
 > document, and optionally pass that baton into a fresh agent via tmux.
 
@@ -136,7 +134,17 @@ Do not drop §3–§4 or §7 when the mission is non-trivial.
 
 ---
 
-## 4. Tmux baton pass (optional)
+## 4. Blackbox Ingestion (Mandatory Pre-Handoff)
+
+Before executing the final Tmux baton pass or exiting, you MUST seal your current session's raw logs into the immutable blackbox vault using the Codex specific extraction hook:
+
+1. Run: `./aim codex-blackbox --session-id <your-session-uuid>`
+
+> **⚠️ NON-FATAL KEY WARNING:** The blackbox vault uses a headless key fallback. If it reports a missing keyring or a vault warning, DO NOT attempt to fix it or abort the handoff. It is non-fatal. Proceed with the handoff normally.
+
+---
+
+## 5. Tmux baton pass (optional)
 
 Only if the Operator asks you to spawn the next agent:
 
@@ -154,7 +162,7 @@ Only if the Operator asks you to spawn the next agent:
 
 ---
 
-## 5. Slash / triggers
+## 6. Slash / triggers
 
 Triggers: handoff, baton, reincarnation doc, `HANDOFF.md`, `LD-CLAUDE_HANDOFF`, session transfer.
 

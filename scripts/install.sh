@@ -42,8 +42,17 @@ echo "Vessel=$VESSEL dest=$DEST mode=$MODE root=$ROOT"
 while IFS= read -r line || [[ -n "$line" ]]; do
   [[ -z "$line" || "$line" =~ ^# ]] && continue
   id="$line"
-  src="$ROOT/skills/$id"
-  if [[ ! -d "$src" ]]; then
+  
+  # Check for vessel-specific override first
+  src_override="$ROOT/vessels/$VESSEL/skills/$id"
+  src_global="$ROOT/skills/$id"
+  
+  if [[ -d "$src_override" ]]; then
+    src="$src_override"
+    echo "Using vessel override for $id"
+  elif [[ -d "$src_global" ]]; then
+    src="$src_global"
+  else
     echo "SKIP $id (missing skills/$id — not in this library)"
     continue
   fi
