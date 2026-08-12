@@ -8,6 +8,8 @@ description: >
 
 # `aim-handoff`
 
+> **⚠️ CRITICAL PREREQUISITE:** Have you run `/aim-memory-wiki`? Before initiating a handoff, always ensure the latest architectural decisions and context have been synthesized into the memory wiki first.
+
 > **MANDATE:** Package tactical working memory into a standardized Engineering Handoff
 > document, and optionally pass that baton into a fresh agent via tmux.
 
