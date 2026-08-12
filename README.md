@@ -80,6 +80,7 @@ Installed by `./scripts/install.sh` from the `skills/` tree. Pack membership is 
 | **aim-export-cartridge** | Export memory cartridge | agy, grok, opencode |
 | **aim-memory-wiki** | Session ingest into `memory-wiki/` (replaces deprecated `aim-wiki`) | agy, grok, opencode |
 | **aim-handoff** | Ephemeral Engineering Handoff (sections 0–9) + optional tmux baton | agy, grok, opencode |
+| **aim-audit** | Evolving product-truth audit (living `AUDIT_<SLUG>.md`) | agy, grok, opencode |
 | **aim-grok-context** | aim-grok vessel context | **grok only** |
 | **aim-bwrap-forge** | bubblewrap sandbox forge + optional tmux isolation | agy, grok, opencode, codex |
 | **aim-mega-guide** | Single-source Mega Guide / SOP from long-form transcript | agy, grok, opencode |
