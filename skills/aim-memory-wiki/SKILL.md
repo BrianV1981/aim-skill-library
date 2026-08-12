@@ -22,7 +22,14 @@ If `memory-wiki/` does not exist or is completely empty (no `index.md` or `log.m
 2. **The Wiki:** A directory of LLM-generated markdown files (`memory-wiki/`). You own this layer entirely. You create pages, update them, maintain cross-references, and keep everything consistent.
 3. **The Schema:** Rules and configurations (like `AGENTS.md`) that guide how you act. 
 
-## 4. YOUR OPERATIONS WHEN TRIGGERED
+## 4. GITOPS WORKFLOW (MANDATORY)
+Because you are updating the persistent architecture of the repository, you MUST follow strict GitOps procedures. Do not commit wiki updates directly to the `main` branch.
+1. **Open an Issue:** Track the wiki documentation updates via a formal issue ticket (e.g., using `gh issue create` or `aim bug`).
+2. **Branch Out:** Spawn a GitOps sandbox (e.g., `aim fix <issue_id>` or standard `git checkout -b fix/...`) to perform your edits safely.
+3. **Update the Wiki:** Perform all the ingestion, writing, and linting within this isolated branch.
+4. **Clean up & Promote:** Once the wiki is updated and verified, commit the changes, close the issue, and cleanly merge/promote the branch back to main (e.g., `aim promote`).
+
+## 5. YOUR OPERATIONS WHEN TRIGGERED
 When the user invokes this skill, you must perform an **Ingest** operation synchronously:
 
 1. **Synthesize Context:** Review what was accomplished, decided, or learned in the recent session. Do NOT copy raw transcripts. Extract the tactical takeaways, architectural changes, or deep insights.
@@ -35,13 +42,13 @@ When the user invokes this skill, you must perform an **Ingest** operation synch
    - If a topic is new and complex, create a new file (e.g., `memory-wiki/pages/new_concept.md`) and interlink it with existing pages using standard Markdown links (`[Concept](concept.md)`).
    - Resolve any contradictory stale claims from older versions.
 
-## 5. LINTING AND CROSS-REFERENCING
+## 6. LINTING AND CROSS-REFERENCING
 Always ensure:
 - No orphaned pages exist. If you make a new page, link to it from `index.md` or another relevant page.
 - Links are valid relative markdown links.
 - Your summaries are precise and dense with signal, free of conversational filler. 
 
-## 6. EXECUTION
+## 7. EXECUTION
 Proceed by explicitly generating your proposed memory updates for the user to review, or immediately begin writing to the `memory-wiki/` directory depending on the user's prompt.
 
 ### Vessel file tools (dual — do not strip either host)
