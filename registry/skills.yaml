@@ -2,7 +2,7 @@
 # type: library | companion
 # Personas (roles) live in aim-coagents/personas — not here.
 version: 1
-updated: 2026-08-10
+updated: 2026-08-12
 
 skills:
   - id: aim-communicate
@@ -62,6 +62,12 @@ skills:
   - id: aim-mega-guide
     type: library
     description: Single-source Mega Guide / SOP pipeline from long-form video transcript
+    status: active
+    vessels: [agy, grok, opencode]
+
+  - id: aim-audit
+    type: library
+    description: Evolving product-truth audit (living AUDIT_<SLUG>.md, update in place)
     status: active
     vessels: [agy, grok, opencode]
 
