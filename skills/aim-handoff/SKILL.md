@@ -28,10 +28,11 @@ Do not confuse precompact (when/why to write under token pressure) with this ski
 
 ## 1. Core philosophy
 
-1. **UPDATE, do not decapitate.** If `HANDOFF.md` / `HANDOFF.md` exists, **update** it. Preserve overarching context; consolidate completed work; expand future detail.
+1. **UPDATE, do not decapitate.** If `HANDOFF.md` exists, you must **surgically update** it. Preserve overarching context. When told to "consolidate completed work", this means appending YOUR new accomplishments into Section 0. It is STRICTLY FORBIDDEN to delete, prune, or compress older historical entries from previous agents.
 2. **Wiki first.** Long-term architecture and decisions belong in `memory-wiki/` via `aim-memory-wiki`. The handoff is the relay baton, not a second wiki.
 3. **No guesses.** Unknown → write `UNKNOWN`. Proven → path, SHA, issue #, command, count.
 4. **No forced architecture.** Do not invent `docs/` trees or roadmaps the Operator did not provide.
+5. **Surgical Edits Required:** You MUST use surgical line-by-line file edit tools (e.g. `replace_file_content`) to update the handoff. Generating the entire file from scratch (e.g. using `write_to_file` with Overwrite) is strictly forbidden as it leads to accidental data loss.
 
 ---
 
@@ -129,7 +130,7 @@ Do not drop §3–§4 or §7 when the mission is non-trivial.
 
 ## 3. Update rules (anti-bloat)
 
-1. Move finished items into **§0** with one-line status; strip stale “still open” prose.
+1. **Append, Never Delete:** Move YOUR finished items into **§0** with a one-line status. Do NOT delete, compress, or aggressively prune the historical table entries left by previous sessions. You may strip your own stale "still open" prose, but prior history must remain intact.
 2. Rewrite **§2 / §9** for the *next* agent — more detail on the future than on the past.
 3. Prefer editing the existing handoff path the project already uses.
 4. After structural facts change, also run **`aim-memory-wiki`** so the wiki stays the long-term store.
