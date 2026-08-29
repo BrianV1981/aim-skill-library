@@ -10,3 +10,7 @@ aim-handoff
 aim-audit
 aim-bwrap-forge
 aim-mega-guide
+
+aim-google
+aim-gitops
+aim-projects

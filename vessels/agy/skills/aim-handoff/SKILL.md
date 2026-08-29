@@ -2,11 +2,13 @@
 name: aim-handoff
 description: >
   Ephemeral context handoff: structure Engineering Handoff docs to the gold-standard
-  numbered template (LD-CLAUDE_HANDOFF style), update in place, optional Tmux baton pass
+  numbered template (HANDOFF style), update in place, optional Tmux baton pass
   to a fresh vessel session.
 ---
 
 # `aim-handoff`
+
+> **⚠️ CRITICAL PREREQUISITE:** Have you run `/aim-memory-wiki`? Before initiating a handoff, always ensure the latest architectural decisions and context have been synthesized into the memory wiki first.
 
 > **MANDATE:** Package tactical working memory into a standardized Engineering Handoff
 > document, and optionally pass that baton into a fresh agent via tmux.
@@ -26,7 +28,7 @@ Do not confuse precompact (when/why to write under token pressure) with this ski
 
 ## 1. Core philosophy
 
-1. **UPDATE, do not decapitate.** If `HANDOFF.md` / `LD-CLAUDE_HANDOFF.md` exists, **update** it. Preserve overarching context; consolidate completed work; expand future detail.
+1. **UPDATE, do not decapitate.** If `HANDOFF.md` / `HANDOFF.md` exists, **update** it. Preserve overarching context; consolidate completed work; expand future detail.
 2. **Wiki first.** Long-term architecture and decisions belong in `memory-wiki/` via `aim-memory-wiki`. The handoff is the relay baton, not a second wiki.
 3. **No guesses.** Unknown → write `UNKNOWN`. Proven → path, SHA, issue #, command, count.
 4. **No forced architecture.** Do not invent `docs/` trees or roadmaps the Operator did not provide.
@@ -36,10 +38,10 @@ Do not confuse precompact (when/why to write under token pressure) with this ski
 ## 2. Gold-standard template (numbered sections)
 
 Canonical shape: gold-standard Engineering Handoff with numbered sections **0–9**
-(LeadDeed-style `LD-CLAUDE_HANDOFF.md` when that project uses it; otherwise `HANDOFF.md`).
+(LeadDeed-style `HANDOFF.md` when that project uses it; otherwise `HANDOFF.md`).
 
 When instructed to prepare a handoff, generate or **update** a structured markdown file
-(e.g. `HANDOFF.md` or project-specific `LD-CLAUDE_HANDOFF.md`) with **all** of the following
+(e.g. `HANDOFF.md` or project-specific `HANDOFF.md`) with **all** of the following
 sections. Mission-specific titles may specialize (e.g. “MODULE-BY-MODULE ANALYSIS FOR #173”)
 but the **numbers and roles must remain**:
 
@@ -119,7 +121,7 @@ Expand freely; this is where complexity lives so §2 stays scannable.)*
 ```
 
 ### Section count note
-The gold standard is **sections 0–9** (ten numbered blocks), matching `LD-CLAUDE_HANDOFF.md`.
+The gold standard is **sections 0–9** (ten numbered blocks), matching `HANDOFF.md`.
 Older drafts used a shorter 0–6 skeleton; **prefer 0–9** for full coherence with LeadDeed handoffs.
 Do not drop §3–§4 or §7 when the mission is non-trivial.
 
@@ -134,17 +136,7 @@ Do not drop §3–§4 or §7 when the mission is non-trivial.
 
 ---
 
-## 4. Blackbox Ingestion (Mandatory Pre-Handoff)
-
-Before executing the final Tmux baton pass or exiting, you MUST seal your current session's raw logs into the immutable blackbox vault using the Antigravity (AGY) specific extraction hook:
-
-1. Run: `./aim agy-blackbox --session-id <your-session-uuid>`
-
-> **⚠️ NON-FATAL KEY WARNING:** The blackbox vault uses a headless key fallback. If it reports a missing keyring or a vault warning, DO NOT attempt to fix it or abort the handoff. It is non-fatal. Proceed with the handoff normally.
-
----
-
-## 5. Tmux baton pass (optional)
+## 4. Tmux baton pass (optional)
 
 Only if the Operator asks you to spawn the next agent:
 
@@ -162,8 +154,8 @@ Only if the Operator asks you to spawn the next agent:
 
 ---
 
-## 6. Slash / triggers
+## 5. Slash / triggers
 
-Triggers: handoff, baton, reincarnation doc, `HANDOFF.md`, `LD-CLAUDE_HANDOFF`, session transfer.
+Triggers: handoff, baton, reincarnation doc, `HANDOFF.md`, `HANDOFF`, session transfer.
 
 Default filename preference: use the project’s existing handoff file if present; else `HANDOFF.md` at vessel/project root.
