@@ -159,3 +159,9 @@ Only if the Operator asks you to spawn the next agent:
 Triggers: handoff, baton, reincarnation doc, `HANDOFF.md`, `HANDOFF`, session transfer.
 
 Default filename preference: use the project’s existing handoff file if present; else `HANDOFF.md` at vessel/project root.
+
+## 6. Finalization & Commit (MANDATORY)
+
+After generating or updating the handoff document, you MUST:
+1. **Auto-Commit:** Execute `git add HANDOFF.md` and `git commit -m "chore: update handoff"` so the Operator is not forced to manually review and commit the ephemeral file.
+2. **Share a Link:** You MUST provide a clickable markdown link to the final file in your chat response (e.g., `[HANDOFF.md](file:///absolute/path/to/HANDOFF.md)`).
