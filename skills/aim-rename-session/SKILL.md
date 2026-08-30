@@ -18,7 +18,9 @@ The Antigravity OS stores session metadata in two specific locations:
 ## 3. THE EXECUTION PROTOCOL (THE BACKGROUND HACK)
 **CRITICAL:** Because you are actively running inside the `agy` loop, the CLI host process will flush its in-memory state to the SQLite DB and JSON cache the exact microsecond your turn ends. If you manually run a Python script to update the DB during your turn, it will be instantly overwritten by the CLI flushing its own (stale) memory.
 
-To bypass this, you MUST spawn a detached background process that `sleep(5)`s. This gives your turn time to finish and the `agy` process time to go idle. Once idle, your background script will surgically update the database behind `agy`'s back.
+Furthermore, if the Operator completely kills the terminal and performs a **cold boot** of `agy`, the CLI ignores the summary caches entirely and recalculates the Preview directly from the raw Protobuf `step_payload` of the very first message inside `conversations/<id>.db`. 
+
+To permanently bypass all of this, you MUST spawn a detached background process that `sleep(5)`s (to wait for `agy` to idle) and then performs both standard DB updates AND a direct binary byte-padded replacement on the session `.db` file.
 
 Write this unified script to `/tmp/rename_session.py` and run it via `nohup`:
 
@@ -27,12 +29,14 @@ import sqlite3
 import json
 import time
 import sys
+import os
 
 # 1. Wait for the agy CLI to finish the current turn and flush its state
 time.sleep(5) 
 
 CONV_ID = sys.argv[1]
-NEW_TITLE = sys.argv[2]
+OLD_TITLE = sys.argv[2]
+NEW_TITLE = sys.argv[3]
 
 # 2. Update SQLite
 conn = sqlite3.connect('/home/kingb/.gemini/antigravity-cli/conversation_summaries.db')
@@ -54,12 +58,34 @@ try:
             json.dump(data, f, indent=2)
 except Exception:
     pass
+
+# 4. Binary Replace for Cold Boots (Protobuf Byte-Length Padding)
+# Protobuf strings have a length prefix. We MUST pad the NEW_TITLE with spaces 
+# so it exactly matches the byte-length of the OLD_TITLE to avoid corrupting the DB.
+PADDED_NEW_TITLE = NEW_TITLE.ljust(len(OLD_TITLE))
+
+SESSION_DB = f'/home/kingb/.gemini/antigravity-cli/conversations/{CONV_ID}.db'
+if os.path.exists(SESSION_DB):
+    with open(SESSION_DB, 'rb') as f:
+        content = f.read()
+    content = content.replace(OLD_TITLE.encode('utf-8'), PADDED_NEW_TITLE.encode('utf-8'))
+    with open(SESSION_DB, 'wb') as f:
+        f.write(content)
+
+# Update history.jsonl just in case
+HISTORY_FILE = '/home/kingb/.gemini/antigravity-cli/history.jsonl'
+if os.path.exists(HISTORY_FILE):
+    with open(HISTORY_FILE, 'rb') as f:
+        content = f.read()
+    content = content.replace(OLD_TITLE.encode('utf-8'), PADDED_NEW_TITLE.encode('utf-8'))
+    with open(HISTORY_FILE, 'wb') as f:
+        f.write(content)
 ```
 
 Execute it strictly using:
 ```bash
-nohup python3 /tmp/rename_session.py "YOUR-CONV-ID" "The New Title" > /dev/null 2>&1 &
+nohup python3 /tmp/rename_session.py "YOUR-CONV-ID" "Old Original Title" "The New Title" > /dev/null 2>&1 &
 ```
 
 ## 4. VERIFICATION
-Inform the Operator that the background script has been launched. Let them know they can verify by typing `/resume` after your turn completes, and the new title will be displayed natively in the terminal UI.
+Inform the Operator that the background script has been launched (including the binary protobuf replacement). Let them know they can verify by typing `/resume` after your turn completes, and the new title will be displayed natively in the terminal UI even upon a cold boot.
