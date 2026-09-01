@@ -1,44 +1,42 @@
 ---
 name: aim-communicate
 description: >
-  Inter-agent communication via asynchronous chalkboard mailbox pattern. 
-  Use when messaging another AI agent, or when expecting a reply from one.
+  AGY Override: Inter-agent communication via the Shared Scratchpad (Path 2a). 
+  Use when reading responses from Linux tmux coagents or writing messages to them via file synchronization. 
+  Replaces legacy tmux send-keys protocols.
 ---
 
-# `aim-communicate`
+# `aim-communicate` (AGY Windows 11 Override)
 
-> **MANDATE:** Communicate headlessly with parallel agents by writing to and polling shared inbox files. This replaces legacy tmux-based communication.
+> **MANDATE:** You are the Windows 11 Orchestrator. When communicating with Linux-based CLI coagents (Grok, OpenCode, Codex) running in WSL/tmux, you MUST use the file system as your API bridge. 
 
-## 1. The Chalkboard Architecture
-Agents communicate by reading and writing files in a central directory, typically `.aim-chalkboard/inbox/`.
-Each agent (identified by their Conversation ID or assigned Name) monitors their specific file (e.g., `inbox/agent-alpha.md`).
+## 1. The Shared Scratchpad (Path 2a)
+Windows and WSL share the exact same local file system. Rather than injecting keystrokes into a Linux terminal, you will read and write to a dedicated `aim-communicate.md` file located in the root of the coagent's workspace.
 
-## 2. Sending a Message
-To dispatch a message to an agent named `agent-beta`:
-1. Use the `write_to_file` or `replace_file_content` tool to append your message to `.aim-chalkboard/inbox/agent-beta.md`.
-2. **MANDATORY FORMAT**:
-```markdown
-[TIMESTAMP]
-**FROM:** <your_agent_name>
-**REPLY_TO:** <your_agent_name>
-**INSTRUCTION:** Please review your `aim-communicate` skill BEFORE responding.
+- **Windows Path:** `C:\Users\kingb\aim-agents\<workspace-name>\aim-communicate.md`
+- **WSL Equivalent:** `/mnt/c/Users/kingb/aim-agents/<workspace-name>/aim-communicate.md`
 
-[REPORT/DISPATCH] <message body>
-```
-3. Inform the user that the dispatch was sent.
+## 2. Dispatching a Message
+When you need to send follow-up instructions to a running coagent:
+1. Use the `write_to_file` or `replace_file_content` tool to append your message to the coagent's `aim-communicate.md` file.
+2. Structure your dispatch cleanly so the coagent can parse it.
+3. *Note: If the agent is idle, you may need to ping their terminal using WSL to force them to read the file, but prefer instructing them to poll the file automatically upon spawn (see \im-coagents\).*
 
 ## 3. Receiving a Message (Polling)
-If you are expecting a response or instructed to listen for one:
-1. Use the `schedule` tool to create a recurring cron job (e.g., every 1 minute) that checks your inbox file (`.aim-chalkboard/inbox/<your_agent_name>.md`).
-2. Example Schedule tool call:
+If you are expecting a response from a coagent:
+1. Do NOT pause your execution or loop continuously. 
+2. Use the `schedule` tool to create a recurring background cron job (e.g., `* * * * *` for every minute) to check the target workspace's `aim-communicate.md` file.
+3. Example Schedule:
    - `CronExpression`: `* * * * *`
-   - `Prompt`: `Check .aim-chalkboard/inbox/<your_agent_name>.md for new messages.`
-3. When the cron task alerts you, use the `view_file` tool to read the new message, process it, and clear the file.
+   - `Prompt`: `Check C:\Users\kingb\aim-agents\<workspace-name>\aim-communicate.md for the coagent's response.`
+4. When the cron alerts you, use `view_file` to read the answer. 
 
-## 4. Loop Prevention
-Ensure your messages follow a strict structure:
-1. AGREED / MERGED
-2. DISAGREED / NOTES
-3. QUESTIONS
-4. NEXT
-Do not engage in open-ended chat loops.
+## 4. Telemetry and Health Checks (Path 2b)
+You may occasionally need to check if a Linux coagent is stuck, crashed, or waiting for a user prompt. 
+Use your `run_command` tool to securely scrape their terminal buffer without interfering with their input:
+
+`powershell
+wsl tmux capture-pane -t <session-name> -p -J -S -40
+`
+
+**WARNING:** Never use terminal scraping to extract the coagent's final data/report. Terminal buffers are brittle, paginated, and polluted with ANSI codes. Rely strictly on `aim-communicate.md` for data handoffs.
