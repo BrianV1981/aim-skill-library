@@ -157,6 +157,19 @@ class TestDualVesselTools(unittest.TestCase):
             "aim-mega-guide should dual-document image tools or vessel table",
         )
 
+    def test_mega_article_documents_dual_tools_and_frontmatter(self):
+        path = SKILLS / "aim-mega-article" / "SKILL.md"
+        self.assertTrue(path.is_file(), "aim-mega-article skill missing")
+        text = path.read_text(encoding="utf-8")
+        fm = parse_frontmatter(text)
+        self.assertEqual(fm.get("name"), "aim-mega-article")
+        for tool in GROK_IMAGE_TOOLS:
+            self.assertIn(tool, text, f"aim-mega-article missing Grok image tool {tool}")
+        self.assertTrue(any(t in text for t in AGY_IMAGE_TOOLS))
+        self.assertTrue(any(t in text for t in GROK_FILE_TOOLS))
+        self.assertTrue(any(t in text for t in AGY_FILE_TOOLS))
+        self.assertIsNone(HOME_ABS_RE.search(text))
+
     def test_communicate_documents_both_skill_install_roots(self):
         text = (SKILLS / "aim-communicate" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn(".grok/skills/aim-communicate", text)

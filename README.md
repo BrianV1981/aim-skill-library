@@ -84,6 +84,7 @@ Installed by `./scripts/install.sh` from the `skills/` tree. Pack membership is 
 | **aim-grok-context** | aim-grok vessel context | **grok only** |
 | **aim-bwrap-forge** | bubblewrap sandbox forge + optional tmux isolation | agy, grok, opencode, codex |
 | **aim-mega-guide** | Single-source Mega Guide / SOP from long-form transcript | agy, grok, opencode |
+| **aim-mega-article** | Multi-source B2B Mega Article (3–5 videos, inline data citations, 3 graphics, Day-Zero Intercept) | agy, grok, opencode |
 
 Full catalog: [`registry/skills.yaml`](registry/skills.yaml).
 

@@ -65,6 +65,12 @@ skills:
     status: active
     vessels: [agy, grok, opencode]
 
+  - id: aim-mega-article
+    type: library
+    description: Multi-source B2B Mega Article pipeline (3-5 videos, inline empirical citations, 3 graphics, Day-Zero Intercept)
+    status: active
+    vessels: [agy, grok, opencode]
+
   - id: aim-audit
     type: library
     description: Evolving product-truth audit (living AUDIT_<SLUG>.md, update in place)
