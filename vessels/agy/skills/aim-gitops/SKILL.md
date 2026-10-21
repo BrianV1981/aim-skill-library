@@ -7,7 +7,7 @@ description: Automates the strict GitOps worktree and TDD workflow (formerly `ai
 > **MANDATE:** Use this skill to spawn isolated git worktrees for development (fixing bugs/issues) and for promoting those changes back to the main branch natively on Windows. You are strictly bound by the rules of Surgical Staging and Test-Driven Development (TDD).
 
 ## 1. Spawning the Sandbox (The `fix` operation)
-When assigned a task or issue (e.g., issue 42), do NOT perform development directly on `main`.
+When assigned a code/config task or issue (e.g., issue 42), do NOT perform development directly on `main` *(Note: Agent Memory in `memory-wiki/**` and `HANDOFF.md` is living OS state exempt from worktrees/issues and is committed/pushed directly to `main`)*.
 1. Ensure you are at the repository root.
 2. Execute the native git worktree command: 
    `git worktree add -b fix/issue-42 workspace/issue-42`

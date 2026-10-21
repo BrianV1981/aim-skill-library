@@ -22,12 +22,21 @@ If `memory-wiki/` does not exist or is completely empty (no `index.md` or `log.m
 2. **The Wiki:** A directory of LLM-generated markdown files (`memory-wiki/`). You own this layer entirely. You create pages, update them, maintain cross-references, and keep everything consistent.
 3. **The Schema:** Rules and configurations (like `AGENTS.md`) that guide how you act. 
 
-## 4. GITOPS WORKFLOW (MANDATORY)
-Because you are updating the persistent architecture of the repository, you MUST follow strict GitOps procedures. Do not commit wiki updates directly to the `main` branch.
-1. **Open an Issue:** Track the wiki documentation updates via a formal issue ticket (e.g., using `gh issue create` or `aim bug`).
-2. **Branch Out:** Spawn a GitOps sandbox (e.g., `aim fix <issue_id>` or standard `git checkout -b fix/...`) to perform your edits safely.
-3. **Update the Wiki:** Perform all the ingestion, writing, and linting within this isolated branch.
-4. **Clean up & Promote:** Once the wiki is updated and verified, commit the changes, close the issue, and cleanly merge/promote the branch back to main (e.g., `aim promote`).
+## 4. DIRECT-TO-MAIN MEMORY STATE PROTOCOL (NO WORKTREES / NO ISSUES)
+`memory-wiki/` is living OS memory state, **not** application code. It is explicitly exempt from GitHub Issues and `workspace/issue-*` worktrees. This skill is designed to run mid-session (or anytime a milestone is reached) as a fast (~15s), autonomous **"Save Game"** checkpoint:
+1. **Synthesize & Write:** Update `memory-wiki/index.md`, `memory-wiki/log.md`, and `memory-wiki/pages/*.md` directly in the root repository (and run `./aim index` if LanceDB is active so RAG is immediately fresh).
+2. **Surgical Commit & Push Directly to `main`:**
+   ```bash
+   git add memory-wiki/
+   git diff --cached --quiet || git commit -m "docs(wiki): ingest <concise summary>"
+   git pull --rebase --autostash origin main
+   git push origin main
+   ```
+3. **Zero-Friction Rules:**
+   - **Never** ask the Operator for permission to commit or push.
+   - **Never** use `git add .` or `git commit -a` — stage *only* `memory-wiki/`.
+   - **Never** open a GitHub Issue or spawn an `archive-fix/*` / `fix/issue-*` worktree branch.
+   - **Never** trigger a handoff — print a concise 3-line summary of what was saved and let the Operator continue working immediately.
 
 ## 5. YOUR OPERATIONS WHEN TRIGGERED
 When the user invokes this skill, you must perform an **Ingest** operation synchronously:
@@ -48,8 +57,8 @@ Always ensure:
 - Links are valid relative markdown links.
 - Your summaries are precise and dense with signal, free of conversational filler. 
 
-## 7. EXECUTION
-Proceed by explicitly generating your proposed memory updates for the user to review, or immediately begin writing to the `memory-wiki/` directory depending on the user's prompt.
+## 7. EXECUTION (AUTONOMOUS SINGLE-TURN CHECKPOINT)
+Immediately apply your synthesized updates to `memory-wiki/` without pausing to ask for review, run `./aim index` if LanceDB is active in the workspace, execute the surgical `git add memory-wiki/` + commit + `git pull --rebase --autostash origin main` + `git push origin main` pipeline, and output a concise 3-line summary of what was saved.
 
 ### Vessel file tools (dual — do not strip either host)
 

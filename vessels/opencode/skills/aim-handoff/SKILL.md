@@ -8,19 +8,26 @@ description: >
 
 # `aim-handoff`
 
-> **MANDATE:** Package tactical working memory into a standardized Engineering Handoff
-> document, and optionally pass that baton into a fresh agent via tmux.
+> **MANDATE:** Execute a one-command end-of-session closeout: automatically verify and ingest any unlogged session work into `memory-wiki/` (Step 1), surgically update the standardized Engineering Handoff document (`HANDOFF.md`), commit & push both directly to `origin/main` with zero confirmation prompts, and optionally pass the baton into a fresh agent via tmux.
 
 ## Relationship to other skills
 
 | Skill | Role |
 |-------|------|
-| **`aim-memory-wiki`** | **Persistent** project lore — do this **first** (or ensure wiki is current) |
-| **`aim-handoff`** (this) | **Ephemeral** baton — mission, traps, exact next steps for the *next* session |
+| **`aim-memory-wiki`** | **Mid-session "Save Game"** — fast (~15s) autonomous checkpoint into `memory-wiki/` without ending the session |
+| **`aim-handoff`** (this) | **End-of-session closeout** — auto-includes any `memory-wiki/` delta + updates `HANDOFF.md` + pushes both to `origin/main` |
 | **`aim-precompact-handoff`** | **Safeguard** — Grok context-window guard; forces a handoff *before* auto-compact destroys context |
 
 Do not confuse precompact (when/why to write under token pressure) with this skill
 (what the handoff document must look like).
+
+---
+
+## 0. Step 1 — Idempotent Auto-Wiki Delta Check (MANDATORY)
+
+Before touching `HANDOFF.md`, you MUST inspect `memory-wiki/log.md`:
+1. **If work or architectural decisions occurred since the last `/aim-memory-wiki`** (or `/aim-memory-wiki` was not run during this session): automatically synthesize the session's discoveries, decisions, and milestones into `memory-wiki/index.md`, `memory-wiki/log.md`, and `memory-wiki/pages/*.md` (and run `./aim index` if LanceDB is active) as Step 1 of this handoff.
+2. **If `memory-wiki/` is already current for the session:** skip straight to updating `HANDOFF.md`.
 
 ---
 
@@ -167,3 +174,19 @@ Only if the Operator asks you to spawn the next agent:
 Triggers: handoff, baton, reincarnation doc, `HANDOFF.md`, `LD-CLAUDE_HANDOFF`, session transfer.
 
 Default filename preference: use the project’s existing handoff file if present; else `HANDOFF.md` at vessel/project root.
+
+---
+
+## 7. Finalization & Direct-to-`main` Atomic Push (ZERO PROMPTS)
+
+`memory-wiki/**` and `HANDOFF.md` are living OS memory state exempt from GitHub Issues and worktrees. After updating `memory-wiki/` (if needed) and `HANDOFF.md`, you MUST immediately execute from the repository root with **zero confirmation prompts**:
+
+```bash
+git add memory-wiki/ HANDOFF.md
+git diff --cached --quiet || git commit -m "docs(handoff): update memory-wiki and HANDOFF.md for session closeout"
+git pull --rebase --autostash origin main
+git push origin main
+```
+
+1. **Surgical Path-Scoped Staging Only:** Never run `git add .` or `git commit -a`. Stage only `memory-wiki/` and `HANDOFF.md` (or the project's existing handoff filename).
+2. **Zero Friction:** Do NOT open a GitHub Issue, do NOT spawn a worktree, and do NOT ask the Operator for permission to commit or push.
