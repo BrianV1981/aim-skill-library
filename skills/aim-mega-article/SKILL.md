@@ -20,7 +20,9 @@ description: "Multi-source B2B authority article pipeline combining 3-5 contextu
 We do not write generic SEO fluff or unverified claims:
 1. **Deep Research Foundations:** Anchor every article in concrete macroeconomic, regulatory, or demographic research (e.g., U.S. Census Bureau ACS metrics, ZIP-code median/average income splits, Zillow Home Value Index / ZHVI, IBISWorld industry sizing, or state regulatory codes).
 2. **Inline Hyperlinked Proof (No "Works Cited" Footers):** Every numeric claim (market size, median income, property valuation, percentage growth, or regulatory code) MUST be hyperlinked directly inline within the prose sentence to its authoritative source (`census.gov`, `zillow.com`, `datausa.io`, `hbs.edu`, municipal building portals). Never dump bare links into a footer.
-3. **Subagent Delegation for Research:** When gathering transcripts (`aim-youtube` / `aim-youtube-meta`) or verifying multi-county statistics, delegate heavy research batches to subagents or background tasks so your primary context window stays sharp for writing.
+3. **Co-Agent & Subagent Delegation for Research:**
+   - **YouTube Extraction (`aim-youtube` Co-Agent via `aim-communicate`):** `aim-youtube` is a persistent Sovereign Co-Agent (the Hub/Miner), not an internal subagent. Use the `aim-communicate` skill (`scripts/tmux_send.sh`) to delegate video discovery, transcript extraction (`.vtt` -> `.txt`), and structured quote/takeaway summarization to the `aim-youtube` tmux session (`[FROM:<your_session>] [REPLY_TO:<your_session>]`), passing target URLs or topic queries so `aim-youtube` maintains its `memory-wiki/` and `content_library/`.
+   - **Internal Subagents (`invoke_subagent`):** Delegate image generation (`image-generator`) and multi-county statistical verification (`self`/`research`) to internal subagents so your primary context window stays sharp for writing.
 
 ---
 
