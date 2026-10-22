@@ -56,7 +56,7 @@ but the **numbers and roles must remain**:
 > **Updated:** [Timestamp]
 > **Updated by:** [Session / vessel id]
 > **Priority Mission:** [One-line goal]
-> **Operator:** [Name / email]
+> **Operator:** Brian Vasquez (`@BrianV1981` / `brianv1981@gmail.com` — or project-specific: `bvasquez@leaddeeds.com`, `bvasquez@ayrianna.com`, `bvasquez@skorbane.com`; never invent an email)
 
 ---
 
