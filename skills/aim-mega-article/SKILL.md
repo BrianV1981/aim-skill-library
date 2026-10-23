@@ -16,11 +16,24 @@ description: "Multi-source B2B authority article pipeline combining 3-5 contextu
 
 ---
 
-## 1. ZERO HALLUCINATION & INLINE EMPIRICAL SOURCING
-We do not write generic SEO fluff or unverified claims:
-1. **Deep Research Foundations:** Anchor every article in concrete macroeconomic, regulatory, or demographic research (e.g., U.S. Census Bureau ACS metrics, ZIP-code median/average income splits, Zillow Home Value Index / ZHVI, IBISWorld industry sizing, or state regulatory codes).
-2. **Inline Hyperlinked Proof (No "Works Cited" Footers):** Every numeric claim (market size, median income, property valuation, percentage growth, or regulatory code) MUST be hyperlinked directly inline within the prose sentence to its authoritative source (`census.gov`, `zillow.com`, `datausa.io`, `hbs.edu`, municipal building portals). Never dump bare links into a footer.
-3. **Co-Agent & Subagent Delegation for Research:**
+## 1. ZERO HALLUCINATION, FIRST-PARTY EFFORT & INLINE EMPIRICAL SOURCING (GOOGLE OCT 1ST DOCTRINE)
+We do not write generic SEO fluff, unverified claims, or "Meat Proxy" AI rewrites. Google's core deep-learning ranking system (`RankEmbed BERT`) is fine-tuned directly on human Quality Rater Information Satisfaction (IS) scores evaluating **Main Content (MC)** across **Effort, Originality, Talent/Skill, and Accuracy**:
+1. **First-Party Non-Training Data Mandate (Rilla Labs / Crutchfield Standard):**
+   - Public YouTube transcripts and macroeconomic stats are secondary reinforcement—never the sole substance of an article.
+   - Every Mega Article MUST inject **proprietary first-party, non-training data** that no generic LLM can synthesize from public web weights: live aggregated internal database telemetry (e.g., actual county DBPR/Permit/Sunbiz velocity counts, `MULTI_HIT` ratios, or ZIP-level commercial parcel metrics), real field test measurements, chemical dilution logs, or authentic first-party jobsite/warehouse photography.
+2. **Deep Research Foundations & Inline Hyperlinked Proof (No "Works Cited" Footers):**
+   - Anchor macroeconomic, regulatory, or demographic claims in concrete primary sources (U.S. Census Bureau ACS metrics, ZIP-code median/average income splits, Zillow Home Value Index / ZHVI, IBISWorld industry sizing, or state/municipal regulatory codes).
+   - Every numeric claim MUST be hyperlinked directly inline within the prose sentence to its authoritative source (`census.gov`, `zillow.com`, `datausa.io`, `hbs.edu`, municipal building portals) and verified as a live, resolving URL (`HTTP 200`) before publishing. Never dump bare links into a footer.
+3. **Interactive "Main Content" (MC) Micro-Tools (Effort & Talent/Skill):**
+   - Google explicitly defines Main Content (MC) to include embedded interactive tools that help fulfill the page's purpose. Whenever supported by the target app (Next.js components or WordPress PHP interactive widgets), pair or embed a functional micro-tool (e.g., an ROI/signal-lag calculator, chemical batch dilution calculator, sq-ft estimator, or interactive comparison selector) inside the article body.
+4. **Anti-LLM Prose Filter & Real Practitioner Byline:**
+   - Strip out classic LLM structural tells that human raters and `RankEmbed BERT` penalize: formulaic contrasts (*"It's not X, it's Y"*, *"Not just X, but Y"*), throat-clearing intros, hedging, and AI crutch transitions (*"Moreover"*, *"Furthermore"*, *"Crucially"*, *"Delve"*). Write with direct, opinionated practitioner authority.
+   - Always attribute content to a **real, verifiable human author** (e.g., `"Brian Vasquez"` with a clickable E-E-A-T bio and verified credentials—never fake AI personas, AI headshots, or generic `"The Team"` bylines).
+5. **Critical Metadata Fact-Checking (`<title>`, `<meta description>`, `<img alt>`):**
+   - Fact-check and audit all `<title>` tags, meta descriptions, and image `alt` text with the same rigor as body prose.
+6. **Zero Scaled Templated Pages (Geo-Mesh Uniqueness Gate):**
+   - Never publish programmatic city, county, or vertical articles using minor word swaps. Every geographic or industry playbook must feature unique local regulatory citations, distinct county/city data tables, and specific regional constraints.
+7. **Co-Agent & Subagent Delegation for Research:**
    - **YouTube Extraction (`aim-youtube` Co-Agent via `aim-communicate`):** `aim-youtube` is a persistent Sovereign Co-Agent (the Hub/Miner), not an internal subagent. Use the `aim-communicate` skill (`scripts/tmux_send.sh`) to delegate video discovery, transcript extraction (`.vtt` -> `.txt`), and structured quote/takeaway summarization to the `aim-youtube` tmux session (`[FROM:<your_session>] [REPLY_TO:<your_session>]`), passing target URLs or topic queries so `aim-youtube` maintains its `memory-wiki/` and `content_library/`.
    - **Internal Subagents (`invoke_subagent`):** Delegate image generation (`image-generator`) and multi-county statistical verification (`self`/`research`) to internal subagents so your primary context window stays sharp for writing.
 
@@ -29,14 +42,14 @@ We do not write generic SEO fluff or unverified claims:
 ## 2. THE ANATOMY OF A MEGA ARTICLE (STEP-BY-STEP)
 
 ### Step 1: Frontmatter Schema
-Every Mega Article markdown file (e.g., `src/content/resources/<slug>.md`) MUST begin with clean YAML frontmatter:
+Every Mega Article markdown file (e.g., `src/content/resources/<slug>.md`) MUST begin with clean YAML frontmatter using a full, real human author byline:
 ```yaml
 ---
 title: "The Florida Storefront Signage & Facade Intercept: Securing High-Margin Commercial Branding"
 date: "2026-10-21"
 description: "A B2B sales playbook on using Day-Zero DBA filings, building permits, and municipal variance agendas to bypass gatekeepers and close high-ticket commercial accounts."
 category: "Sales Playbook" # or "Agency Guide", "Market Intelligence", "Wealth Migration"
-author: "Brian"
+author: "Brian Vasquez"
 thumbnail: "/<slug>_hero_01.jpg"
 ---
 ```
@@ -109,9 +122,10 @@ Use the file tools of the **host CLI you are running in**. Preserve both columns
 
 ## 5. PRE-PUBLISH CHECKLIST
 Before marking a Mega Article complete, verify:
-- [ ] Valid YAML frontmatter (`title`, `date`, `description`, `category`, `author`, `thumbnail`).
+- [ ] Valid YAML frontmatter (`title`, `date`, `description`, `category`, `author: "Brian Vasquez"`, `thumbnail`) with fact-checked `<title>`, meta description, and `<img alt>` attributes.
+- [ ] **First-Party Non-Training Data** injected (proprietary database telemetry, original field measurements, or authentic jobsite photography—never a pure public-data/transcript remix).
 - [ ] **3 to 5** contextual YouTube embeds with `> *"...transcript quote..."*` blockquotes immediately underneath each embed.
-- [ ] **3** bespoke dark-mode/neon graphics generated and placed in `public/`.
-- [ ] Inline hyperlinked citations on all numeric/market/census claims (0 "Works Cited" footers).
-- [ ] Zero competitor brand names in prose (100% scrubbed per the Anti-Competitor Mandate).
+- [ ] **3** bespoke dark-mode/neon graphics (or authentic first-party field photos) placed in `public/`.
+- [ ] Inline hyperlinked citations on all numeric/market/census claims verified for live `HTTP 200` resolution (0 "Works Cited" footers).
+- [ ] **Anti-LLM Prose Filter** passed (zero *"It's not X, it's Y"* formulaic contrasts, zero hedging, zero competitor brand names per the Anti-Competitor Mandate, and zero self-promotional `"Best X Software"` listicle framing).
 - [ ] Production build check (`npm run build` in the dashboard app) passes cleanly.
