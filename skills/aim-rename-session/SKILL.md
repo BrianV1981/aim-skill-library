@@ -37,15 +37,16 @@ time.sleep(5)
 CONV_ID = sys.argv[1]
 OLD_TITLE = sys.argv[2]
 NEW_TITLE = sys.argv[3]
+AGY_DIR = os.path.expanduser('~/.gemini/antigravity-cli')
 
 # 2. Update SQLite
-conn = sqlite3.connect('/home/kingb/.gemini/antigravity-cli/conversation_summaries.db')
+conn = sqlite3.connect(f'{AGY_DIR}/conversation_summaries.db')
 conn.execute(f'UPDATE conversation_summaries SET title="{NEW_TITLE}", preview="{NEW_TITLE}" WHERE conversation_id="{CONV_ID}"')
 conn.commit()
 conn.close()
 
 # 3. Update JSON cache
-CACHE_FILE = '/home/kingb/.gemini/antigravity-cli/cache/conversation_metadata.json'
+CACHE_FILE = f'{AGY_DIR}/cache/conversation_metadata.json'
 try:
     with open(CACHE_FILE, 'r') as f:
         data = json.load(f)
@@ -64,7 +65,7 @@ except Exception:
 # so it exactly matches the byte-length of the OLD_TITLE to avoid corrupting the DB.
 PADDED_NEW_TITLE = NEW_TITLE.ljust(len(OLD_TITLE))
 
-SESSION_DB = f'/home/kingb/.gemini/antigravity-cli/conversations/{CONV_ID}.db'
+SESSION_DB = f'{AGY_DIR}/conversations/{CONV_ID}.db'
 if os.path.exists(SESSION_DB):
     with open(SESSION_DB, 'rb') as f:
         content = f.read()
@@ -73,7 +74,7 @@ if os.path.exists(SESSION_DB):
         f.write(content)
 
 # Update history.jsonl just in case
-HISTORY_FILE = '/home/kingb/.gemini/antigravity-cli/history.jsonl'
+HISTORY_FILE = f'{AGY_DIR}/history.jsonl'
 if os.path.exists(HISTORY_FILE):
     with open(HISTORY_FILE, 'rb') as f:
         content = f.read()
