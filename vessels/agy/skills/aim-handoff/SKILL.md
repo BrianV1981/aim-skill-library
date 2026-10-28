@@ -166,17 +166,24 @@ Triggers: handoff, baton, reincarnation doc, `HANDOFF.md`, `HANDOFF`, session tr
 
 Default filename preference: use the project’s existing handoff file if present; else `HANDOFF.md` at vessel/project root.
 
-## 6. Finalization & Direct-to-`main` Atomic Push (ZERO PROMPTS)
+## 6. Finalization, Blackbox Seal & Direct-to-`main` Atomic Push (ZERO PROMPTS)
 
-`memory-wiki/**` and `HANDOFF.md` are living OS memory state exempt from GitHub Issues and worktrees. After updating `memory-wiki/` (if needed) and `HANDOFF.md`, you MUST immediately execute from the repository root with **zero confirmation prompts**:
+`memory-wiki/**` and `HANDOFF.md` are living OS memory state exempt from GitHub Issues and worktrees. After updating `memory-wiki/` (if needed) and `HANDOFF.md`, you MUST immediately seal the session into the project's Blackbox + Session History DB and push `memory-wiki/` and `HANDOFF.md` from the repository root with **zero confirmation prompts**:
 
 ```bash
+# 1. Seal the current session into <project>/archive/.raw_jsonl_blackbox/ and index into joshua_os/archive/history.db
+if [ -x "./aim" ]; then
+  ./aim agy-blackbox --session-id "<current_conversation_uuid>"
+fi
+
+# 2. Stage and push living memory state directly to origin/main
 git add memory-wiki/ HANDOFF.md
 git diff --cached --quiet || git commit -m "docs(handoff): update memory-wiki and HANDOFF.md for session closeout"
 git pull --rebase --autostash origin main
 git push origin main
 ```
 
-1. **Surgical Path-Scoped Staging Only:** Never run `git add .` or `git commit -a`. Stage only `memory-wiki/` and `HANDOFF.md` (or the project's existing handoff filename).
-2. **Zero Friction:** Do NOT open a GitHub Issue, do NOT spawn a worktree, and do NOT ask the Operator for permission to commit or push.
-3. **Share a Link:** You MUST provide a clickable markdown link to the final file in your chat response (e.g., `[HANDOFF.md](file:///absolute/path/to/HANDOFF.md)`).
+1. **Mandatory Blackbox + Session Notebook Seal:** Always run `./aim agy-blackbox --session-id <current_conversation_uuid>` so the session is encrypted into `archive/.raw_jsonl_blackbox/` and indexed into `joshua_os/archive/history.db` for `/aim-sessions` and `./aim recall`.
+2. **Surgical Path-Scoped Staging Only:** Never run `git add .` or `git commit -a`. Stage only `memory-wiki/` and `HANDOFF.md` (or the project's existing handoff filename).
+3. **Zero Friction:** Do NOT open a GitHub Issue, do NOT spawn a worktree, and do NOT ask the Operator for permission to commit or push.
+4. **Share a Link:** You MUST provide a clickable markdown link to the final file in your chat response (e.g., `[HANDOFF.md](file:///absolute/path/to/HANDOFF.md)`).
