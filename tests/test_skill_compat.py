@@ -196,15 +196,19 @@ class TestRegistryAndManifests(unittest.TestCase):
     def test_manifest_skills_exist_on_disk(self):
         for vessel in ("agy", "grok", "opencode", "codex"):
             for sid in manifest_ids(vessel):
+                exists = (SKILLS / sid).is_dir() or (VESSELS / vessel / "skills" / sid).is_dir()
                 self.assertTrue(
-                    (SKILLS / sid).is_dir(),
-                    f"vessel {vessel} lists {sid} but skills/{sid} missing",
+                    exists,
+                    f"vessel {vessel} lists {sid} but neither skills/{sid} nor vessels/{vessel}/skills/{sid} exists",
                 )
 
     def test_registry_library_skills_exist_and_cover_manifests(self):
         reg = load_registry()
         library = {
             s["id"]: s for s in reg.get("skills", []) if s.get("type") == "library"
+        }
+        companions = {
+            s["id"]: s for s in reg.get("companions", [])
         }
         # Every on-disk skill (except optional orphans we ban) must be registered
         on_disk = {d.name for d in skill_dirs()}
@@ -218,23 +222,20 @@ class TestRegistryAndManifests(unittest.TestCase):
             vessels = set(meta.get("vessels") or [])
             self.assertTrue(vessels, f"{sid}: registry vessels empty")
 
-        # Grok manifest ids must list grok in registry vessels
-        for sid in manifest_ids("grok"):
-            self.assertIn(sid, library, f"grok manifest skill not in registry: {sid}")
-            self.assertIn(
-                "grok",
-                library[sid].get("vessels") or [],
-                f"{sid}: in grok manifest but registry vessels omit grok",
-            )
-
-        # AGY manifest ids must list agy
-        for sid in manifest_ids("agy"):
-            self.assertIn(sid, library, f"agy manifest skill not in registry: {sid}")
-            self.assertIn(
-                "agy",
-                library[sid].get("vessels") or [],
-                f"{sid}: in agy manifest but registry vessels omit agy",
-            )
+        for vessel in ("agy", "grok", "opencode", "codex"):
+            for sid in manifest_ids(vessel):
+                if (SKILLS / sid).is_dir():
+                    self.assertIn(sid, library, f"{vessel} manifest skill not in registry: {sid}")
+                    self.assertIn(
+                        vessel,
+                        library[sid].get("vessels") or [],
+                        f"{sid}: in {vessel} manifest but registry vessels omit {vessel}",
+                    )
+                else:
+                    self.assertTrue(
+                        (VESSELS / vessel / "skills" / sid).is_dir() or sid in companions,
+                        f"{vessel} manifest override {sid} missing from vessels/{vessel}/skills/",
+                    )
 
     def test_no_orphan_skill_suffix_dirs(self):
         bad = [d.name for d in skill_dirs() if d.name.endswith(".skill")]
@@ -271,6 +272,42 @@ class TestInstallSmoke(unittest.TestCase):
             wiki = (agy_dest / "aim-memory-wiki" / "SKILL.md").read_text(encoding="utf-8")
             self.assertTrue(any(t in wiki for t in AGY_FILE_TOOLS))
             self.assertTrue(any(t in wiki for t in GROK_FILE_TOOLS))
+
+    def test_python_and_powershell_cross_platform_installers(self):
+        import sys
+        from unittest.mock import patch
+
+        install_py = ROOT / "scripts" / "install.py"
+        install_ps1 = ROOT / "scripts" / "install.ps1"
+        self.assertTrue(install_py.is_file(), "scripts/install.py required for Windows/cross-platform installs")
+        self.assertTrue(install_ps1.is_file(), "scripts/install.ps1 required for Windows PowerShell installs")
+        self.assertIn("install.py", install_ps1.read_text(encoding="utf-8"))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for vessel in ("agy", "grok", "opencode", "codex"):
+                dest = Path(tmp) / f"py-{vessel}"
+                proc = subprocess.run(
+                    [sys.executable, str(install_py), "--vessel", vessel, "--dest", str(dest), "--mode", "copy"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(proc.returncode, 0, f"install.py {vessel} failed:\n{proc.stdout}\n{proc.stderr}")
+                self.assertNotIn("SKIP ", proc.stdout)
+                for sid in manifest_ids(vessel):
+                    self.assertTrue((dest / sid / "SKILL.md").is_file(), f"{vessel} missing {sid}")
+
+            # Verify Windows unprivileged symlink OSError gracefully falls back to copy
+            scripts_dir = str(ROOT / "scripts")
+            if scripts_dir not in sys.path:
+                sys.path.insert(0, scripts_dir)
+            import install as install_mod
+
+            fallback_dest = Path(tmp) / "win-fallback"
+            with patch("os.symlink", side_effect=OSError("WinError 1314: A required privilege is not held")):
+                rc = install_mod.main(["--vessel", "codex", "--dest", str(fallback_dest), "--mode", "symlink"])
+                self.assertEqual(rc, 0)
+                self.assertTrue((fallback_dest / "aim-memory-wiki" / "SKILL.md").is_file())
 
 
 class TestPolicyDoc(unittest.TestCase):

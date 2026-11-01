@@ -61,9 +61,27 @@ cd aim-skill-library
 
 # OpenCode
 ./scripts/install.sh --vessel opencode --dest "${PROJECT_ROOT:-.}/.opencode/skills" --mode symlink
+
+# Codex
+./scripts/install.sh --vessel codex --dest "${PROJECT_ROOT:-.}/.agents/skills" --mode symlink
 ```
 
-`--mode symlink` (default) or `copy`. Ensure the host CLI scans that skills directory.
+**Windows 10/11 (PowerShell — defaults to `copy` without requiring Developer Mode symlinks):**
+
+```powershell
+git clone https://github.com/BrianV1981/aim-skill-library.git "$HOME\aim-skill-library"
+cd "$HOME\aim-skill-library"
+
+# Antigravity IDE / CLI
+.\scripts\install.ps1 -Vessel agy -Dest "$HOME\.gemini\skills"
+
+# Grok / OpenCode / Codex
+.\scripts\install.ps1 -Vessel grok -Dest "$HOME\.grok\skills"
+.\scripts\install.ps1 -Vessel opencode -Dest "$HOME\.config\opencode\skills"
+.\scripts\install.ps1 -Vessel codex -Dest "$HOME\.agents\skills"
+```
+
+Cross-platform Python entrypoint (`python3 scripts/install.py --vessel <cli> --dest <dir> --mode auto|symlink|copy`) is also available on all OSes. Ensure the host CLI scans that skills directory.
 
 ---
 

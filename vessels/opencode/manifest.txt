@@ -6,6 +6,7 @@ aim-list-sessions
 aim-export-cartridge
 aim-memory-wiki
 aim-handoff
+aim-sessions
 aim-audit
 aim-bwrap-forge
 aim-mega-guide

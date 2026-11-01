@@ -1,4 +1,4 @@
-# Install into: <project>/.gemini/skills/
+# Install into: <project>/.gemini/skills/ or ~/.gemini/antigravity-cli/skills/
 # Core library pack — tool skills only (no personas)
 aim-communicate
 aim-calc
@@ -7,11 +7,12 @@ aim-list-sessions
 aim-export-cartridge
 aim-memory-wiki
 aim-handoff
+aim-sessions
+aim-rename-session
 aim-audit
 aim-bwrap-forge
 aim-mega-guide
 aim-mega-article
-
 aim-google
 aim-gitops
 aim-projects

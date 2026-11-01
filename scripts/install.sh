@@ -40,6 +40,7 @@ mkdir -p "$DEST"
 echo "Vessel=$VESSEL dest=$DEST mode=$MODE root=$ROOT"
 
 while IFS= read -r line || [[ -n "$line" ]]; do
+  line="${line%$'\r'}"
   [[ -z "$line" || "$line" =~ ^# ]] && continue
   id="$line"
   

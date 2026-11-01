@@ -2,14 +2,14 @@
 # type: library | companion
 # Personas (roles) live in aim-coagents/personas — not here.
 version: 1
-updated: 2026-08-12
+updated: 2026-11-01
 
 skills:
   - id: aim-communicate
     type: library
     description: Inter-agent tmux paste protocol (FROM/REPLY_TO)
     status: active
-    vessels: [agy, grok, opencode]
+    vessels: [agy, grok, opencode, codex]
 
   - id: aim-calc
     type: library
@@ -21,31 +21,43 @@ skills:
     type: library
     description: Engram / hybrid search via ./aim
     status: active
-    vessels: [agy, grok, opencode]
+    vessels: [agy, grok, opencode, codex]
 
   - id: aim-list-sessions
     type: library
     description: List indexed knowledge / recent work via ./aim map
     status: active
-    vessels: [agy, grok, opencode]
+    vessels: [agy, grok, opencode, codex]
 
   - id: aim-export-cartridge
     type: library
     description: Export Engram/DataJack cartridge
     status: active
-    vessels: [agy, grok, opencode]
+    vessels: [agy, grok, opencode, codex]
 
   - id: aim-memory-wiki
     type: library
     description: Interactive active-memory ingest into memory-wiki/ (session synthesis). Canonical name for all vessels — not aim-wiki.
     status: active
-    vessels: [agy, grok, opencode]
+    vessels: [agy, grok, opencode, codex]
 
   - id: aim-handoff
     type: library
     description: Ephemeral Engineering Handoff (gold-standard sections 0–9) + optional tmux baton pass
     status: active
-    vessels: [agy, grok, opencode]
+    vessels: [agy, grok, opencode, codex]
+
+  - id: aim-sessions
+    type: library
+    description: Project-scoped session notebook (NotebookLM for sessions) via ./aim sessions and ./aim search-sessions
+    status: active
+    vessels: [agy, grok, opencode, codex]
+
+  - id: aim-rename-session
+    type: library
+    description: Rename active Antigravity CLI session title from within the agent loop
+    status: active
+    vessels: [agy]
 
   - id: aim-grok-context
     type: library
@@ -75,7 +87,7 @@ skills:
     type: library
     description: Evolving product-truth audit (living AUDIT_<SLUG>.md, update in place)
     status: active
-    vessels: [agy, grok, opencode]
+    vessels: [agy, grok, opencode, codex]
 
 companions:
   - id: aim-browser-suite

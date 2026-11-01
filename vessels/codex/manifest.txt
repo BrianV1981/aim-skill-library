@@ -1,3 +1,11 @@
-# Horizon — Codex vessel skills root TBD
+# Install into: <project>/.agents/skills/ or ~/.agents/skills/
+aim-communicate
 aim-calc
+aim-memory-search
+aim-list-sessions
+aim-export-cartridge
+aim-memory-wiki
+aim-handoff
+aim-sessions
+aim-audit
 aim-bwrap-forge
