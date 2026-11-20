@@ -1,20 +1,13 @@
 #!/usr/bin/env bash
-# aim-communicate: paste short message into a tmux session with correct submit
-# for Grok vs AGY, mandatory FROM / REPLY_TO envelope, and **hard verify** via
-# capture-pane that the message landed as a submitted turn (not stuck in composer).
-#
-# Usage:
-#   tmux_send.sh --target <session> --message 'body'
-#   tmux_send.sh --target <session> --file /path/to/short.txt
-#   tmux_send.sh --target <session> --from <session> --reply-to <session> --message '...'
-#   tmux_send.sh --target <session> --message '...' --force-vessel grok|agy
-#   tmux_send.sh --target <session> --message '...' --no-envelope
-#   tmux_send.sh --target <session> --message '...' --no-verify   # emergency only
+# aim-communicate (v2.0): paste short message into a POSIX tmux session using
+# universal Enter-only submit (never Escape — #19), pre-submit composer check,
+# mandatory FROM / REPLY_TO envelope, and deep (-S -300) capture-pane verification
+# with zero duplicate retries once the composer clears.
 #
 # Exit codes:
 #   0 = paste + submit + tmux verification OK
 #   1 = usage / missing session / bad args
-#   2 = paste ran but verification FAILED (message not seen as submitted turn)
+#   2 = PASTE_FAIL or VERIFY_FAIL (message not confirmed as submitted turn)
 #
 set -euo pipefail
 
@@ -35,7 +28,7 @@ Usage:
   tmux_send.sh --target <session> --message 'text'
   tmux_send.sh --target <session> --from <session> --reply-to <session> --message 'text'
   tmux_send.sh --target <session> --file /path/to/msg.txt
-  --force-vessel grok|agy|opencode
+  --force-vessel grok|agy|opencode|codex
   --no-envelope   # do not auto-prefix FROM/REPLY_TO
   --no-verify     # skip capture-pane verification (not recommended)
 EOF
@@ -68,7 +61,6 @@ if ! tmux has-session -t "$TARGET" 2>/dev/null; then
   exit 1
 fi
 
-# Resolve FROM session (who is sending)
 if [[ -z "$FROM_SESSION" ]]; then
   FROM_SESSION="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
 fi
@@ -77,17 +69,14 @@ if [[ -z "$FROM_SESSION" ]]; then
   echo "[tmux_send] warning: could not detect FROM session; set --from explicitly" >&2
 fi
 
-# Default REPLY_TO to FROM (orchestrator pattern: "reply to me")
 if [[ -z "$REPLY_TO" ]]; then
   REPLY_TO="$FROM_SESSION"
 fi
 
-# Envelope: always include FROM + REPLY_TO unless already present or disabled
 if [[ "$NO_ENVELOPE" -eq 0 ]]; then
   if ! grep -q '\[FROM:' <<<"$MESSAGE"; then
     MESSAGE="[FROM:${FROM_SESSION}] [REPLY_TO:${REPLY_TO}] ${MESSAGE}"
   fi
-  # If FROM present but REPLY_TO missing, inject REPLY_TO after FROM
   if grep -q '\[FROM:' <<<"$MESSAGE" && ! grep -q '\[REPLY_TO:' <<<"$MESSAGE"; then
     MESSAGE="${MESSAGE/\[FROM:${FROM_SESSION}\]/[FROM:${FROM_SESSION}] [REPLY_TO:${REPLY_TO}]}"
     if ! grep -q '\[REPLY_TO:' <<<"$MESSAGE"; then
@@ -96,153 +85,102 @@ if [[ "$NO_ENVELOPE" -eq 0 ]]; then
   fi
 fi
 
-# Detect vessel from TARGET pane command
 CMD="$(tmux list-panes -t "$TARGET" -F '#{pane_current_command}' 2>/dev/null | head -1 || true)"
-VESSEL="$FORCE_VESSEL"
-if [[ -z "$VESSEL" ]]; then
-  case "$CMD" in
-    grok) VESSEL=grok ;;
-    opencode) VESSEL=opencode ;;
-    agy|agy.real|gemini) VESSEL=agy ;;
-    *)
-      case "$TARGET" in
-        *grok*|grok-audit) VESSEL=grok ;;
-        *opencode*) VESSEL=opencode ;;
-        *) VESSEL=agy ;;
-      esac
-      ;;
-  esac
-fi
+VESSEL="${FORCE_VESSEL:-${CMD:-auto}}"
 
-# Fingerprint: unique substring we must see in the target pane after submit
-# Prefer [FROM:…] token; fall back to first 48 non-space chars of body
+# Unique fingerprint needle from first rendered line (never broken by multi-line paste chips)
+FIRST_LINE="$(printf '%s' "$MESSAGE" | head -n 1)"
 NEEDLE=""
-if [[ "$MESSAGE" =~ \[FROM:[^\]]+\] ]]; then
+if [[ "$FIRST_LINE" =~ \[FROM:[^\]]+\] ]]; then
   NEEDLE="${BASH_REMATCH[0]}"
 fi
 if [[ -z "$NEEDLE" ]]; then
-  NEEDLE="$(printf '%s' "$MESSAGE" | tr -d '\n' | head -c 48)"
+  NEEDLE="$(printf '%s' "$FIRST_LINE" | head -c 48)"
 fi
-# Also keep a short body snippet for dual-match (reduces false positives)
-BODY_SNIP="$(printf '%s' "$MESSAGE" | tr -d '\n' | sed 's/\[FROM:[^]]*\]//g; s/\[REPLY_TO:[^]]*\]//g' | sed 's/^[[:space:]]*//' | head -c 32)"
 
 echo "[tmux_send] from=$FROM_SESSION reply_to=$REPLY_TO target=$TARGET cmd=$CMD vessel=$VESSEL"
-echo "[tmux_send] message=${MESSAGE:0:200}..."
 echo "[tmux_send] verify_needle=${NEEDLE:0:60}"
 
-capture_tail() {
-  tmux capture-pane -t "$TARGET" -p -J -S -40 2>/dev/null || true
+capture_deep() {
+  tmux capture-pane -t "$TARGET" -p -J -S -300 2>/dev/null || true
 }
 
-# Baseline capture (optional diagnostics)
-capture_tail > "${VERIFY_LOG}.before" || true
+composer_has_pending_paste() {
+  local pane="$1"
+  local bottom_prompt
+  bottom_prompt="$(printf '%s\n' "$pane" | tail -n 6 | grep -E '^[>❯›][[:space:]]+' || true)"
+  [[ -n "$bottom_prompt" ]] || return 1
+  if grep -Fq "[Pasted text" <<<"$bottom_prompt" || grep -Fq -- "$NEEDLE" <<<"$bottom_prompt"; then
+    return 0
+  fi
+  return 1
+}
+
+BEFORE_PANE="$(capture_deep)"
+BEFORE_COUNT="$(grep -F -c -- "$NEEDLE" <<<"$BEFORE_PANE" || true)"
 
 tmux set-buffer -b "$BUF" "$MESSAGE"
-tmux send-keys -t "$TARGET" C-u 2>/dev/null || true
-sleep 0.2
 tmux paste-buffer -b "$BUF" -p -t "$TARGET"
-sleep 0.5
+sleep 0.25
 
-submit_keys() {
-  if [[ "$VESSEL" == "grok" || "$VESSEL" == "opencode" ]]; then
-    # Grok + OpenCode: Enter = send. Do NOT send Escape first (cancels/blurs).
-    tmux send-keys -t "$TARGET" Enter
-    sleep 0.35
-  else
-    # AGY: Escape then Enter as separate events
-    tmux send-keys -t "$TARGET" Escape
-    sleep 0.3
-    tmux send-keys -t "$TARGET" Enter
-  fi
-}
+AFTER_PASTE_PANE="$(capture_deep)"
+AFTER_PASTE_COUNT="$(grep -F -c -- "$NEEDLE" <<<"$AFTER_PASTE_PANE" || true)"
 
-submit_keys
-sleep 1.2
+# AC2: Pre-submit composer check — confirm paste landed (inline needle or [Pasted text chip) before sending Enter
+if ! grep -Fq "[Pasted text" <<<"$AFTER_PASTE_PANE" && [[ "$AFTER_PASTE_COUNT" -le "$BEFORE_COUNT" ]] && ! grep -Fq -- "$NEEDLE" <<<"$AFTER_PASTE_PANE"; then
+  tmux delete-buffer -b "$BUF" 2>/dev/null || true
+  echo "[tmux_send] PASTE_FAIL: composer empty after paste-buffer; sending no keys" >&2
+  exit 2
+fi
 
-# --- Hard verification via target tmux session pane ---
+# AC1: Enter ONLY across ALL vessels (agy, grok, opencode, codex). NEVER send Escape.
+tmux send-keys -t "$TARGET" Enter
+sleep 0.8
+
 verify_delivery() {
-  local pane attempt=1 max_attempts=3
+  local pane attempt=1 max_attempts=3 cur_count
   while [[ $attempt -le $max_attempts ]]; do
-    pane="$(capture_tail)"
+    pane="$(capture_deep)"
     printf '%s\n' "$pane" > "$VERIFY_LOG"
+    cur_count="$(grep -F -c -- "$NEEDLE" <<<"$pane" || true)"
 
-    # 1) Needle must appear somewhere in the captured pane
-    if ! grep -F -q -- "$NEEDLE" <<<"$pane"; then
-      echo "[tmux_send] verify attempt $attempt: NEEDLE not in pane" >&2
+    # If paste is STILL sitting unsubmitted in the bottom composer prompt, retry Enter once
+    if composer_has_pending_paste "$pane"; then
       if [[ $attempt -lt $max_attempts ]]; then
-        echo "[tmux_send] re-submitting Enter (vessel=$VESSEL)..." >&2
-        if [[ "$VESSEL" == "grok" || "$VESSEL" == "opencode" ]]; then
-          tmux send-keys -t "$TARGET" Enter
-        else
-          tmux send-keys -t "$TARGET" Escape
-          sleep 0.25
-          tmux send-keys -t "$TARGET" Enter
-        fi
-        sleep 1.0
-      fi
-      attempt=$((attempt + 1))
-      continue
-    fi
-
-    # 2) Prefer body snippet also present (when non-empty)
-    if [[ -n "$BODY_SNIP" ]] && [[ ${#BODY_SNIP} -ge 8 ]]; then
-      if ! grep -F -q -- "$BODY_SNIP" <<<"$pane"; then
-        echo "[tmux_send] verify attempt $attempt: BODY_SNIP not in pane" >&2
-        attempt=$((attempt + 1))
+        echo "[tmux_send] verify attempt $attempt: paste still in composer; retrying Enter..." >&2
+        tmux send-keys -t "$TARGET" Enter
         sleep 0.8
+        attempt=$((attempt + 1))
         continue
       fi
+      return 1
     fi
 
-    # 3) Failure signals: stuck only in composer / not submitted
-    # Grok: "esc to interrupt" / Working / tool activity after our paste = good
-    # If needle is only on the bottom prompt line with no Working/Loading, may still be OK if paste-buffer -p put it as user turn
-    # AGY success markers
-    if grep -Eiq 'Working\.\.\.|Loading\.\.\.|Thought for|esc to cancel|esc to interrupt|Tool|Bash\(|function_call' <<<"$pane"; then
-      echo "[tmux_send] VERIFY_OK: needle present + agent activity markers"
+    # Composer is clear: NEVER re-send Enter (AC4 — prevents duplicate turns).
+    # Success if needle count increased, needle is in deep history, or active turn/chip rendered.
+    if [[ "$cur_count" -gt "$BEFORE_COUNT" ]] \
+      || grep -Fq -- "$NEEDLE" <<<"$pane" \
+      || grep -Fq "[Pasted text" <<<"$pane" \
+      || grep -Eiq 'Working\.\.\.|Loading\.\.\.|Thought for|esc to cancel|esc to interrupt' <<<"$pane"; then
+      echo "[tmux_send] VERIFY_OK: turn submitted on target=$TARGET (composer clear, deep capture verified)"
       return 0
     fi
 
-    # Needle present as submitted user turn ("> [FROM:..." or plain history line)
-    if grep -F -- "$NEEDLE" <<<"$pane" | grep -qvE '^\s*$'; then
-      # Heuristic fail: if the ONLY match is still sitting with "Type a message" empty composer patterns
-      # Success if we see our line as a user bubble / history entry
-      if grep -Eiq "FROM:${FROM_SESSION}|REPLY_TO:|^\> .*FROM:|submitted|user turn" <<<"$pane" \
-        || grep -F -q -- "$NEEDLE" <<<"$pane"; then
-        echo "[tmux_send] VERIFY_OK: needle present in target pane (history/composer submitted)"
-        return 0
-      fi
-    fi
-
-    echo "[tmux_send] verify attempt $attempt: ambiguous; retrying submit" >&2
-    if [[ "$VESSEL" == "grok" || "$VESSEL" == "opencode" ]]; then
-      tmux send-keys -t "$TARGET" Enter
-    else
-      tmux send-keys -t "$TARGET" Escape
-      sleep 0.25
-      tmux send-keys -t "$TARGET" Enter
-    fi
-    sleep 1.0
+    sleep 0.5
     attempt=$((attempt + 1))
   done
   return 1
 }
 
-echo "[tmux_send] capture (tail after submit):"
-capture_tail | tail -35
-
 VERIFY_RC=0
 if [[ "$NO_VERIFY" -eq 1 ]]; then
   echo "[tmux_send] warning: --no-verify set; skipping hard check" >&2
 else
-  if verify_delivery; then
-    VERIFY_RC=0
-  else
+  if ! verify_delivery; then
     VERIFY_RC=2
     echo "[tmux_send] VERIFY_FAIL: message not confirmed in tmux session '$TARGET'" >&2
     echo "[tmux_send] last capture saved: $VERIFY_LOG" >&2
-    echo "[tmux_send] capture (full tail for debug):" >&2
-    tail -40 "$VERIFY_LOG" >&2 || true
+    tail -n 30 "$VERIFY_LOG" >&2 || true
   fi
 fi
 

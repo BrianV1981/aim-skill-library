@@ -175,6 +175,93 @@ class TestDualVesselTools(unittest.TestCase):
         self.assertIn(".grok/skills/aim-communicate", text)
         self.assertIn(".gemini/skills/aim-communicate", text)
 
+    def test_communicate_v2_unifies_mailbox_and_removes_agy_override(self):
+        self.assertFalse(
+            (VESSELS / "agy" / "skills" / "aim-communicate").exists(),
+            "divergent vessels/agy/skills/aim-communicate override must be removed (#17/#19/#24)",
+        )
+        skill_text = (SKILLS / "aim-communicate" / "SKILL.md").read_text(encoding="utf-8")
+        for required_token in (
+            "aim-mail send",
+            "aim-mail inbox",
+            "aim-mail read",
+            "aim-mail reply",
+            "aim-mail ack",
+            "install-agy-sidecar",
+        ):
+            self.assertIn(required_token, skill_text)
+
+        helper_text = (SKILLS / "aim-communicate" / "scripts" / "tmux_send.sh").read_text(encoding="utf-8")
+        self.assertNotIn("send-keys -t \"$TARGET\" Escape", helper_text)
+        self.assertIn("-S -300", helper_text)
+        self.assertIn("aim-mailbox", (ROOT / "docs" / "COMPANIONS.md").read_text(encoding="utf-8"))
+
+    def test_tmux_send_helper_enter_only_and_paste_verification(self):
+        import os
+
+        if os.name == "nt" or not shutil.which("bash"):
+            self.skipTest("POSIX bash required for tmux_send.sh helper test")
+
+        helper = SKILLS / "aim-communicate" / "scripts" / "tmux_send.sh"
+        with tempfile.TemporaryDirectory() as tmp:
+            tdir = Path(tmp)
+            log_file = tdir / "tmux_calls.log"
+            mode_file = tdir / "mode.txt"
+            fake_tmux = tdir / "tmux"
+            fake_tmux.write_text(
+                "#!/usr/bin/env bash\n"
+                f"LOG={str(log_file)!r}\n"
+                f"MODE=$(cat {str(mode_file)!r} 2>/dev/null || echo ok)\n"
+                "echo \"$*\" >> \"$LOG\"\n"
+                "case \"$1\" in\n"
+                "  has-session) exit 0 ;;\n"
+                "  display-message) echo 'aim-joshua' ;;\n"
+                "  list-panes) echo 'agy.real' ;;\n"
+                "  set-buffer|paste-buffer|send-keys|delete-buffer) exit 0 ;;\n"
+                "  capture-pane)\n"
+                "    if [[ \"$MODE\" == \"empty_paste\" ]]; then\n"
+                "      echo 'idle prompt'\n"
+                "    elif grep -q 'send-keys' \"$LOG\"; then\n"
+                "      echo '[FROM:aim-joshua] [REPLY_TO:aim-joshua] [Pasted text #1 +20 lines]'\n"
+                "      echo 'Working...'\n"
+                "    else\n"
+                "      echo '> [Pasted text #1 +20 lines]'\n"
+                "    fi\n"
+                "    ;;\n"
+                "esac\n",
+                encoding="utf-8",
+            )
+            fake_tmux.chmod(0o755)
+            env = os.environ.copy()
+            env["PATH"] = f"{tdir}:{env.get('PATH', '')}"
+
+            # 1) Multi-line paste chip ([Pasted text #1 +20 lines]) -> Enter ONLY (no Escape), rc=0, 1 turn
+            mode_file.write_text("chip_ok", encoding="utf-8")
+            msg_20 = "\n".join(f"Line {i}: audit payload" for i in range(1, 21))
+            r_ok = subprocess.run(
+                ["bash", str(helper), "--target", "aim-auditor", "--from", "aim-joshua", "--message", msg_20],
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(r_ok.returncode, 0, f"expected rc=0:\n{r_ok.stdout}\n{r_ok.stderr}")
+            calls = log_file.read_text(encoding="utf-8")
+            self.assertNotIn("Escape", calls)
+            self.assertEqual(calls.count("send-keys -t aim-auditor Enter"), 1)
+
+            # 2) Empty composer after paste -> PASTE_FAIL (rc=2) with zero Enter keys sent
+            log_file.unlink()
+            mode_file.write_text("empty_paste", encoding="utf-8")
+            r_fail = subprocess.run(
+                ["bash", str(helper), "--target", "aim-auditor", "--from", "aim-joshua", "--message", "ping"],
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(r_fail.returncode, 2)
+            self.assertIn("PASTE_FAIL", r_fail.stderr)
+            self.assertNotIn("send-keys", log_file.read_text(encoding="utf-8"))
+
     def test_calc_documents_both_skill_install_roots(self):
         text = (SKILLS / "aim-calc" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn(".grok/skills", text)
