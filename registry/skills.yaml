@@ -2,12 +2,12 @@
 # type: library | companion
 # Personas (roles) live in aim-coagents/personas — not here.
 version: 1
-updated: 2026-11-01
+updated: 2026-11-20
 
 skills:
   - id: aim-communicate
     type: library
-    description: Inter-agent tmux paste protocol (FROM/REPLY_TO)
+    description: Cross-OS inter-agent communication (v2.0) via aim-mailbox (aim-mail CLI) + Enter-only tmux fallback
     status: active
     vessels: [agy, grok, opencode, codex]
 
@@ -114,4 +114,11 @@ companions:
     type: companion
     description: DNA bank — co-agent blueprints + personas (roles)
     repo: https://github.com/BrianV1981/aim-coagents
+    status: active
+
+  - id: aim-mailbox
+    type: companion
+    description: Zero-daemon, zero-LLM local Maildir post office and cross-OS wake dispatcher (aim-mail CLI)
+    repo: https://github.com/BrianV1981/aim-mailbox
+    install: "git clone https://github.com/BrianV1981/aim-mailbox && pip install -e ./aim-mailbox"
     status: active

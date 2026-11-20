@@ -91,7 +91,7 @@ Installed by `./scripts/install.sh` from the `skills/` tree. Pack membership is 
 
 | Skill | Role | Typical vessels |
 |-------|------|-----------------|
-| **aim-communicate** | Inter-agent tmux protocol (`FROM` / `REPLY_TO`) | agy, grok, opencode |
+| **aim-communicate** | Cross-OS inter-agent mail & dispatch (`v2.0` via `aim-mailbox` + `Enter`-only `tmux` fallback) | agy, grok, opencode, codex |
 | **aim-calc** | Stateful scientific calculator | agy, grok, opencode, codex |
 | **aim-memory-search** | Engram / hybrid search via `./aim` | agy, grok, opencode |
 | **aim-list-sessions** | Map / list indexed work | agy, grok, opencode |
@@ -177,6 +177,17 @@ mkdir -p "${HOME}/.gemini/antigravity-cli/skills" && ln -sfn "$(pwd)" "${HOME}/.
 | Skill / pack | Job |
 |--------------|-----|
 | **aim-coagents** | DNA bank / blueprints for sovereign co-agents (equip when spawning peers) |
+
+### [aim-mailbox](https://github.com/BrianV1981/aim-mailbox) — cross-OS Maildir & wake router
+
+| Companion | Job |
+|-----------|-----|
+| **aim-mailbox** (`aim-mail`) | Zero-daemon, zero-LLM local Maildir post office and cross-OS wake dispatcher backing **aim-communicate** (`v2.0`) |
+
+```bash
+git clone https://github.com/BrianV1981/aim-mailbox.git
+pip install -e ./aim-mailbox
+```
 
 More install notes: [`docs/COMPANIONS.md`](docs/COMPANIONS.md).
 

@@ -8,5 +8,6 @@
 | **[aim-google](https://github.com/BrianV1981/aim-google)** | Google Workspace CLI skill | Clone; link `agent-skill/aim-google` into vessel skills |
 | **[aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)** | Session → markdown forensics | Clone; follow that repo’s skill install |
 | **[aim-coagents](https://github.com/BrianV1981/aim-coagents)** | Co-agent DNA bank | Clone; equip when spawning peers |
+| **[aim-mailbox](https://github.com/BrianV1981/aim-mailbox)** | Cross-OS Maildir post office & wake dispatcher (`aim-mail` CLI backing `aim-communicate` v2) | `git clone … && pip install -e ./aim-mailbox` |
 
 Library install (`scripts/install.sh`) never copies these. Link them deliberately after clone.

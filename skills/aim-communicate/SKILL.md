@@ -1,310 +1,162 @@
 ---
 name: aim-communicate
 description: >
-  Inter-agent communication via tmux with permission gates, chalkboard + short-paste
-  protocol (Grok/AGY-hardened). MUST declare sender session and REPLY_TO session on every
-  message. MUST verify delivery by inspecting the target tmux session (capture-pane).
-  Use when messaging another AI agent in tmux, board-room/swarm chat, or when the user
-  asks to talk to another agent. Updated 2026-07-19 (mandatory pane verification).
+  Cross-OS, cross-harness inter-agent communication (v2.0) powered by `aim-mailbox` (`aim-mail` CLI)
+  with POSIX `tmux_send.sh` (`Enter`-only) fallback. Enforces Operator permission gates, mandatory
+  FROM + REPLY_TO routing, 1-hop loop prevention, and verified delivery across Windows 11 Desktop
+  Sidecars, WSL2, macOS, and Linux (`agy`, `grok`, `opencode`, `codex`, `vscode`, `tmux`).
 ---
 
-# AIM-Communicate: Inter-Agent Tmux Protocol
+# AIM-Communicate (`v2.0`): Cross-OS Inter-Agent Mail & Dispatch Protocol
 
-You may operate where multiple AI agents run in different tmux sessions (board room / swarm).
-Common sessions: `aim-agy`, `aim-grok`, `grok-audit`, `aim-connect`, `aim-youtube`, reincarnation vessels (`agy_reincarnation_*`, `grok_reincarnation_*`), `ayrianna-scraper`, etc.
+Agents across A.I.M. run on different operating systems (**Linux, WSL2, macOS, and Native Windows 11**) and inside different harnesses (**Antigravity Desktop/IDE, Antigravity CLI, OpenCode, Grok Build, Codex, VS Code, and POSIX `tmux`**).
 
----
-
-## 0. MANDATORY: Session identity + reply routing (do not skip)
-
-**Every inter-agent message MUST state:**
-
-1. **FROM** — the **exact** tmux session **you are running in now**  
-2. **REPLY_TO** — the **exact** tmux session the peer must answer (almost always = the orchestrator’s FROM)  
-
-### 0a. Discover your own session (always run first)
-
-```bash
-# Preferred (when your pane is the active one in a known session):
-tmux display-message -p '#{session_name}'
-
-# If that is empty/wrong (nested/detached), find by cwd or list:
-tmux list-panes -a -F '#{session_name} #{pane_current_command} #{pane_current_path}'
-```
-
-Record that name. **Do not guess** `aim-grok` vs `grok-audit`. They are different orchestrators.
-
-### 0b. Required Message Foundation
-
-When you communicate with another agent, you MUST lay the foundation along with the message. Your message must begin with exactly this block:
-
-```text
-To: <target_tmux_session_name> (You are receiving this in tmux session <target_tmux_session_name>. Note: Agents are identified by their tmux session name)
-From: <your_tmux_session_name> (My tmux session name)
-INSTRUCTION: Please review your `aim-communicate` skill BEFORE responding to this message.
-
-[REPORT|DISPATCH from <role>] <message body>
-```
-
-**Examples (correct):**
-
-```text
-To: agy_reincarnation_1783842559 (You are receiving this in tmux session agy_reincarnation_1783842559...)
-From: grok-audit (My tmux session name)
-INSTRUCTION: Please review your `aim-communicate` skill BEFORE responding to this message.
-
-[DISPATCH] Merge #92-95 — read /path/DISPATCH.md
-```
-
-**Wrong (causes misdelivery):**
-
-```text
-[REPORT from aim-agy] Merged #92-#95 — read /path/REPORT.md
-# Missing the To/From/Instruction foundation → causes confusion and broken workflows.
-```
-
-### 0c. Dispatch files MUST include
-
-In every chalkboard dispatch:
-
-```markdown
-**FROM (sender tmux session):** `grok-audit`
-**REPLY_TO (mandatory reply session):** `grok-audit`
-**Also notify (optional secondary):** `aim-grok`   # only if Operator wants a CC
-```
-
-Peer agents **must** paste reports to **REPLY_TO only** unless Operator adds a CC list.  
-If both `aim-grok` and `grok-audit` are listed, **primary is always REPLY_TO**.
-
-### 0d. Incident (2026-07-12)
-
-Orchestrator on **`grok-audit`** ordered aim-agy to report to `grok-audit`. The agent reported only to **`aim-grok`**, so the live orchestrator did not see the paste. Fix: mandatory `[FROM:…] [REPLY_TO:…]` on every short paste + dispatch header.
-
-### 0e. Incident (2026-07-19) — “replied in chat only”
-
-Orchestrator answered another agent **only in its own chat UI** and never pasted into the peer’s tmux session. Peer waited forever. Fix: **delivery is not done until §3d / §3e verification passes** against the **target** session pane.
+`aim-communicate` (`v2.0`) uses **`aim-mailbox` (`aim-mail` CLI)** as the universal transport and wake-up layer across all OSes and harnesses, with `scripts/tmux_send.sh` preserved as a direct POSIX `tmux` fallback when `aim-mail` is not installed.
 
 ---
 
-## 1. Permission mandate
+## 0. MANDATORY: Identity + Reply Routing (Never Skip)
 
-You are **forbidden** from unilaterally messaging another agent's tmux session unless the Operator explicitly approves.
+Every inter-agent message **MUST** declare:
+1. **`FROM`** — your exact logical agent ID (or current `tmux` session name when using the `tmux` fallback).
+2. **`REPLY_TO`** — the exact target agent/session that must receive the response (defaults to `FROM` unless the Operator specifies another orchestrator).
 
-- Operator text like "tell aim-agy …" / "communicate with …" **is** approval for that target and intent.
-- Incoming aim-communicate paste from another session **is** approval to reply to their REPLY_TO / From session.
-- Do not open open-ended multi-hop chat without Operator in the loop.
+Discover your logical registration or current `tmux` session first:
+```bash
+# Check registered logical agents in aim-mailbox:
+aim-mail agents
 
-## 2. Discover targets first
+# If running inside a POSIX tmux session, verify your exact session name:
+tmux display-message -p '#{session_name}' 2>/dev/null || true
+```
+**Do not guess** `aim-grok` vs. `aim-auditor` — verify your identity and read `reply_to` from any incoming envelope before replying.
+
+---
+
+## 1. Operator Permission Mandate
+
+You are **strictly forbidden** from initiating unsolicited peer-to-peer messages unless the Operator explicitly authorizes it:
+- Operator instructions such as *"tell aim-auditor …"*, *"dispatch to copy-cat …"*, or *"communicate with …"* grant approval for that target and task (`--operator-approved`).
+- Receiving an inbound `aim-mail` envelope (or `aim-communicate` dispatch) **pre-authorizes a 1-hop reply** back to its `reply_to` target on the same `thread_id`.
+- Never open open-ended multi-hop agent chat loops without the Operator in the loop (`max_hops=1` default; send `[DO NOT REPLY]` / `--no-ack-required` on final closeout reports).
+
+---
+
+## 2. Primary Protocol: `aim-mail` (`aim-mailbox` — All OSes & Harnesses)
+
+`aim-mail` stores messages atomically in a lock-free JSON Maildir (`~/.aim/mailbox` or `$AIM_MAILBOX_DIR`) safe across Linux, macOS, native Windows 11 NTFS, and WSL2 `/mnt/c` shares, and wakes sleeping or minimized peers via their registered driver (`agy-desktop-sidecar`, `agy-cli`, `opencode-http`, `grok-cli`, `codex-cli`, `vscode-chat`, `tmux`, or `command`).
+
+### 2a. Registering Your Agent or Target (One-Time Setup)
 
 ```bash
-tmux list-sessions
-tmux list-panes -a -F '#{session_name} #{pane_current_command} #{pane_current_path}'
-tmux capture-pane -t <session> -p -J -S -20
+# Antigravity CLI (Windows 11, WSL2, macOS, Linux):
+aim-mail register aim-auditor --driver agy-cli --cwd ~/aim-agents/aim-auditor
+
+# Windows 11 Antigravity Desktop / IDE (even while minimized):
+aim-mail install-agy-sidecar
+aim-mail register copy-cat --driver agy-desktop-sidecar --session-id <conversation-uuid>
+
+# OpenCode Server / Desktop:
+aim-mail register backend-dev --driver opencode-http --http-url http://127.0.0.1:4096
+
+# Grok Build CLI:
+aim-mail register grok-audit --driver grok-cli --session-id grok-audit --cwd ~/aim-auditor
+
+# Live POSIX / WSL2 tmux pane (1-line Enter-only doorbell):
+aim-mail register aim-connect --driver tmux --tmux-session aim-connect
 ```
 
-Wait for idle prompt when possible.
+> **WSL2 ↔ Native Windows 11 Shared Mailbox:** Set `export AIM_MAILBOX_DIR="/mnt/c/Users/<WindowsUser>/.aim/mailbox"` in WSL2 so WSL2 CLI agents and native Windows 11 Desktop/CLI agents share one atomic Maildir with zero SQLite lock contention.
 
-| `pane_current_command` | Vessel | Submit |
-|------------------------|--------|--------|
-| `grok` | Grok TUI | **Enter only** (§4a) |
-| `opencode` | OpenCode TUI | **Enter only** (same as Grok; §4a) |
-| `agy` / `agy.real` | Antigravity | **Escape, then Enter** (§4b) |
+### 2b. Sending a Dispatch or Handoff
 
-**Note:** Project name ≠ session name. An aim-agy agent may run in `agy_reincarnation_*` or `aim-agy`. Always use the **tmux session string**, not the repo name alone.
-
-## 3. Chalkboard + short paste
-
-### 3a. Write full content to disk
-
-Prefer paths under the target or sender project (`planning-artifacts/`, `docs/`).
-
-### 3b. Helper script (required on Grok vessels)
+Write large specifications or reports to disk first (`artifacts/`, `docs/`), keep `--body` concise, and attach file paths via `--ref`:
 
 ```bash
-# Auto-detect FROM session; force REPLY_TO into the message prefix if missing.
-# Exits 0 only if target tmux pane verification passes; exits 2 on VERIFY_FAIL.
-#
-# Grok vessel (preferred when pane_current_command is grok):
-bash "$PROJECT_ROOT/.grok/skills/aim-communicate/scripts/tmux_send.sh" \
-  --target ayrianna-scraper \
-  --from "$(tmux display-message -p '#{session_name}')" \
-  --reply-to grok-audit \
-  --message 'Merged #92-#95 — read /abs/path/REPORT.md'
+aim-mail send \
+  --from aim-joshua \
+  --to aim-auditor \
+  --reply-to aim-joshua \
+  --subject "Pass 15 Delta Audit" \
+  --body "[DISPATCH] Audit v0.1.0 against README.md and report findings." \
+  --ref artifacts/AUDIT_TARGET.md \
+  --operator-approved \
+  --wake \
+  --json
+```
+- `--wake` immediately triggers the recipient's configured driver (`rc=0` only if verified; otherwise `aim-mail pulse` / Sidecar `watch` delivers asynchronously).
+- **Never claim "sent/woken"** if `--wake` exits non-zero — inspect `stderr` or `aim-mail inbox <target> --state all --json`.
 
-# AGY / Antigravity vessel (when skills live under .gemini):
+### 2c. Checking, Reading, Replying & Acknowledging Mail
+
+When woken by `aim-mailbox` (or instructed by the Operator to check your inbox):
+
+```bash
+# 1. Inspect unread envelopes
+aim-mail inbox <my-agent-id>
+
+# 2. Read and claim the message
+aim-mail read <my-agent-id> <message_id> --claim
+
+# 3a. Reply to sender's reply_to (auto-increments hop_count & auto-ACKs parent)
+aim-mail reply <my-agent-id> <message_id> \
+  --body "1. AGREED: Verified 15/15 tests green. 2. NOTES: None. 3. NEXT: Promoted." \
+  --ref artifacts/AUDIT_REPORT.md \
+  --wake
+
+# 3b. Or acknowledge a 1-hop closeout report with no reply needed
+aim-mail ack <my-agent-id> <message_id> --note "Received closeout; loop closed."
+```
+
+### 2d. Zero-Token Waiting (Orchestrators)
+
+When waiting synchronously for a peer's reply without burning LLM polling turns:
+```bash
+aim-mail wait <my-agent-id> --thread-id <thread_id> --timeout 120 --json
+```
+
+---
+
+## 3. POSIX `tmux` Direct Fallback (`scripts/tmux_send.sh`)
+
+On Linux/WSL/macOS hosts where `aim-mail` is not on `PATH` and both agents live in local `tmux` sessions, use the bundled `tmux_send.sh` helper with **short 1–3 line pointers** (write long content to a file first — never paste 20+ line novels directly into a TUI composer).
+
+Canonical installed skill helper paths (keep all vessels in sync):
+- `$PROJECT_ROOT/.grok/skills/aim-communicate/scripts/tmux_send.sh` — Grok project install
+- `$PROJECT_ROOT/.gemini/skills/aim-communicate/scripts/tmux_send.sh` — AGY project install
+- `$HOME/.gemini/antigravity-cli/skills/aim-communicate/scripts/tmux_send.sh` — Global AGY CLI
+- `$HOME/.gemini/config/skills/aim-communicate/scripts/tmux_send.sh` — Global AGY 2.0
+- `$HOME/.grok/skills/aim-communicate/scripts/tmux_send.sh` — Global Grok CLI
+
+```bash
 bash "$PROJECT_ROOT/.gemini/skills/aim-communicate/scripts/tmux_send.sh" \
-  --target ayrianna-scraper \
+  --target aim-auditor \
   --from "$(tmux display-message -p '#{session_name}')" \
-  --reply-to grok-audit \
-  --message 'Merged #92-#95 — read /abs/path/REPORT.md'
+  --reply-to aim-joshua \
+  --message '[DISPATCH] Audit #24 — read artifacts/DISPATCH.md'
 ```
 
-The script:
+### Critical `tmux` Submit Rules (`#19` Hardened)
+1. **`Enter` ONLY Across All Vessels (`agy`, `grok`, `opencode`, `codex`):** **NEVER send `Escape` before `Enter`.** On Antigravity CLI (`1.4+`), Grok CLI, and OpenCode, `Escape` cancels/deletes multi-line paste chips (`[Pasted text #1 +N lines]`) or clears the composer.
+2. **Pre-Submit Composer Check:** Confirm the pasted text (or `[Pasted text` chip) is present in the composer before sending `Enter`.
+3. **Mandatory Deep-Capture Verification (`-S -300`):** Answering only in your own chat is **NOT** delivery. Trust `tmux_send.sh` exit code `0` (`VERIFY_OK`); on exit `2` (`VERIFY_FAIL`), inspect `tmux capture-pane -t <target> -p -J -S -300` before retrying so you never double-submit an already-accepted turn.
 
-1. Prefixes `[FROM:…] [REPLY_TO:…]` when missing  
-2. Pastes with correct vessel submit (Grok Enter / AGY Esc→Enter)  
-3. **Captures the target session pane and verifies the message is present**  
-4. Retries submit once/twice if needed  
-5. **Exits non-zero if verification fails** — you must treat that as “not sent”
+---
 
-Canonical script path (keep vessels in sync — **do not delete either**):
+## 4. Loop Prevention & Structured Reports
 
-- `$PROJECT_ROOT/.grok/skills/aim-communicate/scripts/tmux_send.sh` — Grok
-- `$PROJECT_ROOT/.gemini/skills/aim-communicate/scripts/tmux_send.sh` — AGY
-- `~/.gemini/antigravity-cli/skills/aim-communicate/scripts/tmux_send.sh` (if universally installed)
-- `~/.grok/skills/aim-communicate/scripts/tmux_send.sh` (user-global Grok)
-
-### 3c. Manual short paste (only if script unavailable)
-
-```bash
-FROM=$(tmux display-message -p '#{session_name}')
-TARGET=ayrianna-scraper
-REPLY_TO=grok-audit
-
-cat << EOF > /tmp/aim_msg.txt
-To: ${TARGET} (You are receiving this in tmux session ${TARGET}. Note: Agents are identified by their tmux session name)
-From: ${FROM} (My tmux session name)
-INSTRUCTION: Please review your \`aim-communicate\` skill BEFORE responding to this message.
-
-[REPORT from ${FROM}] Closed #N — read /abs/path/REPORT.md
-EOF
-
-tmux load-buffer /tmp/aim_msg.txt
-tmux paste-buffer -p -t "$TARGET"
-# vessel-specific submit — §4
-# THEN you MUST run §3e verification yourself
-```
-
-### 3d. MANDATORY — Verify delivery by looking at the target tmux session
-
-**Answering only in your own chat is NOT delivery.**  
-After every paste (script or manual), you MUST confirm the **target** session shows your message.
-
-#### Preferred: trust `tmux_send.sh` exit code
-
-| Exit | Meaning | Agent duty |
-|------|---------|------------|
-| `0` | `VERIFY_OK` — needle found in target pane | You may tell Operator “sent” |
-| `2` | `VERIFY_FAIL` | **Do not claim success**; re-send or escalate |
-| `1` | bad args / missing session | Fix target name / args |
-
-#### Required manual verification (always if not using script, or to double-check)
-
-```bash
-TARGET=<exact_session>
-NEEDLE='[FROM:grok-audit]'   # or another unique substring you pasted
-
-sleep 1.2
-tmux capture-pane -t "$TARGET" -p -J -S -40 | tee /tmp/aim_comm_verify_last.txt | tail -40
-
-# Must find your message:
-grep -F -- "$NEEDLE" /tmp/aim_comm_verify_last.txt
-```
-
-**Success signals (any strong combo):**
-
-| Vessel | Success in capture |
-|--------|-------------------|
-| Grok | Your text appears as a **submitted user turn** (not only unsent composer fluff); often followed by agent activity |
-| AGY | Your line visible **and** `Working...` / `Loading...` / tool activity / `Thought for` |
-| Both | Unique fingerprint (`[FROM:…]`, absolute path, issue number) appears in the **last ~40 lines** of the target pane |
-
-**Failure signals:**
-
-| Signal | Meaning |
-|--------|---------|
-| `grep` finds nothing | Never landed / wrong session |
-| Text only in bottom bar, no submit | Enter did not fire (Grok) or wrong submit recipe |
-| Script exit `2` | Treat as not sent |
-
-**Agent hard rules after verify:**
-
-1. If verify fails → **retry once** with `tmux_send.sh`, then report failure to Operator.  
-2. **Never** say “I told ayrianna-scraper …” unless verify passed.  
-3. Paste a short excerpt of the capture (or script `VERIFY_OK` line) when reporting to Operator.
-
-### 3e. Verification checklist (copy into your head)
-
+Format peer reports deterministically and close the loop cleanly:
 ```text
-[ ] Correct TARGET session name (list-sessions, not project nickname)
-[ ] FROM + REPLY_TO on the message
-[ ] paste + correct submit (Grok Enter / AGY Esc→Enter)
-[ ] capture-pane -t TARGET
-[ ] unique needle grepped in that capture
-[ ] only THEN claim delivery
+1. AGREED / COMPLETED (issue #s, commit SHAs)
+2. FINDINGS / NOTES
+3. BLOCKERS / QUESTIONS (only if escalation needed)
+4. NEXT (or [DO NOT REPLY] when closing the loop)
 ```
 
-## 4. Submit rules (vessel-specific)
+---
 
-### 4a. Grok (`grok`) — Enter only
-
-```bash
-tmux send-keys -t <target> Enter
-# optional fallback: C-m
-```
-
-**Never** send Escape before Enter on Grok (Esc clears/cancels; does not send).
-
-### 4b. AGY (`agy` / `agy.real`) — Escape then Enter (separate calls)
-
-```bash
-tmux send-keys -t <target> Escape
-sleep 0.3
-tmux send-keys -t <target> Enter
-```
-
-### 4c. Do / Don't
-
-| Do | Don't |
-|----|--------|
-| Declare FROM + REPLY_TO every time | Assume “aim-grok” is the orchestrator |
-| Detect vessel before submit | One submit recipe for all CLIs |
-| `paste-buffer -p` | Long `send-keys` novels |
-| **capture-pane verify on TARGET** | **Assume delivery / reply only in your chat** |
-| Write report file first | Rely only on paste |
-| Fail closed on VERIFY_FAIL | Pretend it worked |
-
-## 5. Loop prevention
-
-```text
-Structure:
-1. AGREED / MERGED (issue #s, SHAs)
-2. DISAGREE / NOTES
-3. QUESTIONS
-4. NEXT
-No open-ended chat loop.
-```
-
-## 6. Host map (re-check live with list-sessions)
-
-| Session | Typical CLI | Typical cwd | Submit |
-|---------|-------------|-------------|--------|
-| `grok-audit` | `grok` | `~/grok-audit` | Enter |
-| `aim-grok` | `grok` | `~/aim-grok` | Enter |
-| `aim-agy` | `agy` | `~/aim-agy` | Esc→Enter |
-| `agy_reincarnation_*` | `agy` | aim-agy worktrees | Esc→Enter |
-| `ayrianna-scraper` | `agy.real` | `~/aim-ayrianna` | Esc→Enter |
-| `aim-connect` | `agy` | `~/aim-connect` | Esc→Enter |
-| `aim-opencode` | `opencode` | `~/aim-opencode` | Enter only |
-
-**Orchestrator on this host often lives in `grok-audit`, not `aim-grok`.** Read REPLY_TO from the dispatch.
-
-OpenCode vessel skill (extra notes):  
-`~/aim-opencode/.opencode/skills/aim-communicate/SKILL.md`
-
-## 7. Anti-patterns
-
-- Reporting to `aim-grok` when REPLY_TO was `grok-audit`  
-- Omitting FROM/REPLY_TO  
-- Using project nickname (`aim-agy`) as session name when you are actually `agy_reincarnation_*`  
-- AGY Escape→Enter on Grok  
-- **Replying only in your own chat instead of pasting into the peer tmux session**  
-- Claiming “sent” without capture-pane / script VERIFY_OK  
-- Secrets in pastes  
-- Force-push / destructive ops without Operator  
-
-## 8. Incident log
-
-1. **2026-07-12 Grok submit:** Escape→Enter left pastes unsent on Grok. Fix: Enter only.  
-2. **2026-07-12 Wrong reply session:** aim-agy reported merge of #92–#95 to `aim-grok` instead of orchestrator `grok-audit`. Fix: mandatory FROM + REPLY_TO (§0).  
-3. **2026-07-19 Chat-only reply:** Orchestrator answered `ayrianna-scraper` in local chat and never tmux-pasted. Fix: mandatory target-pane verification (§3d); `tmux_send.sh` exits 2 on VERIFY_FAIL.
+## 5. Changelog & Operational Lessons
+1. **2026-07-12 (`grok` Escape bug & wrong reply target):** `Escape` cleared pastes on Grok, and omitting `REPLY_TO` misrouted reports to `aim-grok` instead of `grok-audit`. Enforced mandatory `FROM` + `REPLY_TO`.
+2. **2026-07-19 (Chat-only reply):** Replying in local chat never reached the peer. Enforced target-side delivery verification (`rc=2` on `VERIFY_FAIL`).
+3. **2026-10-21 (`#17` / `#19` AGY `Escape` wipe & OS skill drift):** `Escape`→`Enter` deleted 20-line pastes on `agy 1.4.4`, shallow `-S -40` + `BODY_SNIP` caused false `VERIFY_FAIL` duplicates on `[Pasted text #1 +N lines]` chips, and divergent Windows vs. Linux `SKILL.md` overrides drifted.
+4. **2026-11-20 (`v2.0` `aim-mailbox` unification, `#24`):** Unified all OSes and harnesses under `aim-mail` (`aim-mailbox` atomic Maildir + Windows 11 Sidecar / CLI / HTTP / `tmux` drivers), retired the divergent `vessels/agy/skills/aim-communicate` override, and hardened `tmux_send.sh` to `Enter`-only submit with pre-submit composer verification and `-S -300` deep capture.
