@@ -501,6 +501,10 @@ class TestInstallSmoke(unittest.TestCase):
         return proc.stdout
 
     def test_install_grok_and_agy_no_skips(self):
+        import os
+
+        if os.name == "nt" or not shutil.which("bash"):
+            self.skipTest("POSIX bash required for scripts/install.sh")
         with tempfile.TemporaryDirectory() as tmp:
             grok_dest = Path(tmp) / "grok"
             agy_dest = Path(tmp) / "agy"
