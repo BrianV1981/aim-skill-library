@@ -85,7 +85,7 @@ aim-mail send \
   --json
 ```
 - `--wake` immediately triggers the recipient's configured driver (`rc=0` only if verified; otherwise `aim-mail pulse` / Sidecar `watch` delivers asynchronously).
-- **Never claim "sent/woken"** if `--wake` exits non-zero — inspect `stderr` or `aim-mail inbox <target> --state all --json`.
+- **Never claim "sent/woken"** if `--wake` exits non-zero — inspect `stderr` or `aim-mail inbox <target> --state all --json`. If `aim-mail` is on `PATH` but the target is not yet registered in `aim-mail agents` (or `--wake` fails/skips), either register the target + watcher first (`aim-mail register ...`) or fall back to `scripts/tmux_send.sh` on POSIX `tmux` hosts rather than assuming `--wake` succeeded.
 
 ### 2c. Checking, Reading, Replying & Acknowledging Mail
 
@@ -119,7 +119,7 @@ aim-mail wait <my-agent-id> --thread-id <thread_id> --timeout 120 --json
 
 ## 3. POSIX `tmux` Direct Fallback (`scripts/tmux_send.sh`)
 
-On Linux/WSL/macOS hosts where `aim-mail` is not on `PATH` and both agents live in local `tmux` sessions, use the bundled `tmux_send.sh` helper with **short 1–3 line pointers** (write long content to a file first — never paste 20+ line novels directly into a TUI composer).
+On Linux/WSL/macOS hosts where `aim-mail` is not on `PATH`, or where the target session is not yet registered in `aim-mail agents` (and `--wake` fails/skips), use the bundled `tmux_send.sh` helper with **short 1–3 line pointers** (write long content to a file first — never paste 20+ line novels directly into a TUI composer).
 
 Canonical installed skill helper paths (keep all vessels in sync):
 - `$PROJECT_ROOT/.grok/skills/aim-communicate/scripts/tmux_send.sh` — Grok project install
