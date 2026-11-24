@@ -49,6 +49,22 @@ AGY_IMAGE_TOOLS = ("generate_image",)
 
 
 def skill_dirs() -> list[Path]:
+    if (ROOT / ".git").exists() and shutil.which("git"):
+        proc = subprocess.run(
+            ["git", "-C", str(ROOT), "ls-files", "-z", "skills"],
+            capture_output=True,
+            check=False,
+        )
+        if proc.returncode == 0 and proc.stdout:
+            names: set[str] = set()
+            for raw_rel in proc.stdout.decode("utf-8", errors="ignore").split("\0"):
+                if not raw_rel:
+                    continue
+                parts = Path(raw_rel).parts
+                if len(parts) >= 2 and parts[0] == "skills" and (SKILLS / parts[1]).is_dir():
+                    names.add(parts[1])
+            if names:
+                return [SKILLS / n for n in sorted(names)]
     return sorted(p for p in SKILLS.iterdir() if p.is_dir())
 
 
@@ -113,20 +129,21 @@ class TestFrontmatterAndLayout(unittest.TestCase):
 
     def test_no_machine_absolute_home_paths(self):
         offenders: list[str] = []
-        for path in SKILLS.rglob("*"):
-            if not path.is_file():
-                continue
-            if path.suffix not in {".md", ".sh", ".py", ".txt", ".yaml", ".yml"}:
-                continue
-            if "__pycache__" in path.parts:
-                continue
-            text = path.read_text(encoding="utf-8", errors="replace")
-            for i, line in enumerate(text.splitlines(), 1):
-                # Allow example placeholders that are clearly non-machine
-                if re.search(r"/home/user\b|/home/YOU\b|/Users/you\b", line, re.I):
+        for skill_dir in skill_dirs():
+            for path in skill_dir.rglob("*"):
+                if not path.is_file():
                     continue
-                if HOME_ABS_RE.search(line):
-                    offenders.append(f"{path.relative_to(ROOT)}:{i}: {line.strip()}")
+                if path.suffix not in {".md", ".sh", ".py", ".txt", ".yaml", ".yml"}:
+                    continue
+                if "__pycache__" in path.parts:
+                    continue
+                text = path.read_text(encoding="utf-8", errors="replace")
+                for i, line in enumerate(text.splitlines(), 1):
+                    # Allow example placeholders that are clearly non-machine
+                    if re.search(r"/home/user\b|/home/YOU\b|/Users/you\b", line, re.I):
+                        continue
+                    if HOME_ABS_RE.search(line):
+                        offenders.append(f"{path.relative_to(ROOT)}:{i}: {line.strip()}")
         self.assertEqual(
             offenders,
             [],
@@ -454,6 +471,17 @@ class TestRegistryAndManifests(unittest.TestCase):
     def test_no_orphan_skill_suffix_dirs(self):
         bad = [d.name for d in skill_dirs() if d.name.endswith(".skill")]
         self.assertEqual(bad, [], f"rename *.skill dirs: {bad}")
+
+    def test_skill_dirs_ignores_untracked_scratch_dirs_inside_git(self):
+        untracked = SKILLS / "_tmp_untracked_scratch_skill"
+        try:
+            untracked.mkdir(exist_ok=True)
+            (untracked / "SKILL.md").write_text("untracked scratch", encoding="utf-8")
+            discovered = {d.name for d in skill_dirs()}
+            self.assertNotIn("_tmp_untracked_scratch_skill", discovered)
+        finally:
+            if untracked.exists():
+                shutil.rmtree(untracked)
 
 
 class TestInstallSmoke(unittest.TestCase):
