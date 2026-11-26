@@ -1,17 +1,18 @@
 ---
 name: aim-communicate
 description: >
-  Cross-OS, cross-harness inter-agent communication (v2.0) powered by `aim-mailbox` (`aim-mail` CLI)
+  Cross-OS, cross-harness inter-agent communication (v2.1) powered by `aim-mailbox` (`aim-mail` CLI)
   with POSIX `tmux_send.sh` (`Enter`-only) fallback. Enforces Operator permission gates, mandatory
-  FROM + REPLY_TO routing, 1-hop loop prevention, and verified delivery across Windows 11 Desktop
-  Sidecars, WSL2, macOS, and Linux (`agy`, `grok`, `opencode`, `codex`, `vscode`, `tmux`).
+  FROM + REPLY_TO routing, project-scoped `--cwd` auto-session resolution across handoffs, 1-hop loop
+  prevention, and verified delivery across Windows 11 Desktop Sidecars, WSL2, macOS, and Linux
+  (`agy`, `grok`, `opencode`, `codex`, `vscode`, `tmux`).
 ---
 
-# AIM-Communicate (`v2.0`): Cross-OS Inter-Agent Mail & Dispatch Protocol
+# AIM-Communicate (`v2.1`): Cross-OS Inter-Agent Mail & Dispatch Protocol
 
 Agents across A.I.M. run on different operating systems (**Linux, WSL2, macOS, and Native Windows 11**) and inside different harnesses (**Antigravity Desktop/IDE, Antigravity CLI, OpenCode, Grok Build, Codex, VS Code, and POSIX `tmux`**).
 
-`aim-communicate` (`v2.0`) uses **`aim-mailbox` (`aim-mail` CLI)** as the universal transport and wake-up layer across all OSes and harnesses, with `scripts/tmux_send.sh` preserved as a direct POSIX `tmux` fallback when `aim-mail` is not installed.
+`aim-communicate` (`v2.1`) uses **`aim-mailbox` (`aim-mail` CLI `v0.2.1+`)** as the universal transport and wake-up layer across all OSes and harnesses, with `scripts/tmux_send.sh` preserved as a direct POSIX `tmux` fallback when `aim-mail` is not installed.
 
 ---
 
@@ -46,45 +47,66 @@ You are **strictly forbidden** from initiating unsolicited peer-to-peer messages
 
 `aim-mail` stores messages atomically in a lock-free JSON Maildir (`~/.aim/mailbox` or `$AIM_MAILBOX_DIR`) safe across Linux, macOS, native Windows 11 NTFS, and WSL2 `/mnt/c` shares, and wakes sleeping or minimized peers via their registered driver (`agy-desktop-sidecar`, `agy-cli`, `opencode-http`, `grok-cli`, `codex-cli`, `vscode-chat`, `tmux`, or `command`).
 
-### 2a. Registering Your Agent or Target (One-Time Setup)
+### 2a. Registering a Project Workspace (One-Time, Handoff-Proof Setup)
+
+Register **project workspaces** (`--cwd` or `--tmux-session`) rather than pinning ephemeral conversation UUIDs so `/aim-handoff` rotations work automatically without re-registering:
 
 ```bash
-# Antigravity CLI (Windows 11, WSL2, macOS, Linux):
-aim-mail register aim-auditor --driver agy-cli --cwd ~/aim-agents/aim-auditor
+# Antigravity CLI (auto-resolves latest top-level conversation for --cwd):
+aim-mail register aim-auditor --driver agy-cli --cwd ~/aim-agents/aim-auditor --clear-session-id
 
-# Windows 11 Antigravity Desktop / IDE (even while minimized):
+# Windows 11 Antigravity Desktop / IDE (auto-resolves latest conversation for --cwd even while minimized):
 aim-mail install-agy-sidecar
-aim-mail register copy-cat --driver agy-desktop-sidecar --session-id <conversation-uuid>
+aim-mail register copy-cat --driver agy-desktop-sidecar --cwd "C:\Projects\copy-cat" --clear-session-id
 
 # OpenCode Server / Desktop:
 aim-mail register backend-dev --driver opencode-http --http-url http://127.0.0.1:4096
 
-# Grok Build CLI:
-aim-mail register grok-audit --driver grok-cli --session-id grok-audit --cwd ~/aim-auditor
+# Grok Build CLI / Codex CLI:
+aim-mail register grok-audit --driver grok-cli --cwd ~/aim-auditor
+aim-mail register codex-dev --driver codex-cli --cwd ~/aim-codex
 
-# Live POSIX / WSL2 tmux pane (1-line Enter-only doorbell):
-aim-mail register aim-connect --driver tmux --tmux-session aim-connect
+# Live POSIX / WSL2 tmux pane (1-line Enter-only doorbell bound to project tmux session):
+aim-mail register aim-connect --driver tmux --tmux-session aim-connect --cwd ~/aim-connect
+
+# Optional (<2ms empty-inbox) turn-boundary hook installer:
+aim-mail install-hooks --harness agy --agent aim-auditor
 ```
 
-> **WSL2 ↔ Native Windows 11 Shared Mailbox:** Set `export AIM_MAILBOX_DIR="/mnt/c/Users/<WindowsUser>/.aim/mailbox"` in WSL2 so WSL2 CLI agents and native Windows 11 Desktop/CLI agents share one atomic Maildir with zero SQLite lock contention.
+> **WSL2 ↔ Native Windows 11 Shared Mailbox:** Set `export AIM_MAILBOX_DIR="/mnt/c/Users/<WindowsUser>/.aim/mailbox"` in WSL2 (`~/.bashrc`) and run `C:\Python314\python.exe -m aim_mailbox ...` on Windows so both OSes share one atomic Maildir with zero SQLite lock contention.
 
 ### 2b. Sending a Dispatch or Handoff
 
-Write large specifications or reports to disk first (`artifacts/`, `docs/`), keep `--body` concise, and attach file paths via `--ref`:
+Write large specifications or reports to disk first (`artifacts/`, `docs/`), keep `--body` concise, attach file paths via `--ref`, and optionally set `--priority urgent|normal|low` or `--coalesce-key <key>`:
 
 ```bash
+# Direct CLI / HTTP / tmux wake (--wake dispatches synchronously):
 aim-mail send \
   --from aim-joshua \
   --to aim-auditor \
   --reply-to aim-joshua \
   --subject "Pass 15 Delta Audit" \
-  --body "[DISPATCH] Audit v0.1.0 against README.md and report findings." \
+  --body "[DISPATCH] Audit v0.2.1 against README.md and report findings." \
   --ref artifacts/AUDIT_TARGET.md \
+  --priority normal \
   --operator-approved \
   --wake \
   --json
+
+# Messaging a Windows 11 `agy-desktop-sidecar` target from WSL2 (OMIT --wake!):
+# `ANTIGRAVITY_LS_ADDRESS` exists only inside the Windows Sidecar child process;
+# omit `--wake` and the running Sidecar `watch` loop delivers within ~1.5s.
+aim-mail send \
+  --from aim-mailbox \
+  --to joshua-win11 \
+  --reply-to aim-mailbox \
+  --subject "Cross-OS Sync" \
+  --body "[DISPATCH] Verify Windows desktop build." \
+  --operator-approved \
+  --json
 ```
-- `--wake` immediately triggers the recipient's configured driver (`rc=0` only if verified; otherwise `aim-mail pulse` / Sidecar `watch` delivers asynchronously).
+- `--wake` immediately triggers the recipient's configured driver (`rc=0` only if verified; `--priority low --wake` requires `--allow-deferred` because low-priority mail batches in `--low-batch-window`).
+- **Windows Sidecar Targets (`driver=agy-desktop-sidecar`):** Do **not** pass `--wake` from WSL2 or external shells—leave `--wake` off and verify delivery ~2 seconds later via `aim-mail inbox <target> --state active --json`.
 - **Never claim "sent/woken"** if `--wake` exits non-zero — inspect `stderr` or `aim-mail inbox <target> --state all --json`. If `aim-mail` is on `PATH` but the target is not yet registered in `aim-mail agents` (or `--wake` fails/skips), either register the target + watcher first (`aim-mail register ...`) or fall back to `scripts/tmux_send.sh` on POSIX `tmux` hosts rather than assuming `--wake` succeeded.
 
 ### 2c. Checking, Reading, Replying & Acknowledging Mail
@@ -92,15 +114,15 @@ aim-mail send \
 When woken by `aim-mailbox` (or instructed by the Operator to check your inbox):
 
 ```bash
-# 1. Inspect unread envelopes
-aim-mail inbox <my-agent-id>
+# 1. Inspect active (unread + claimed) envelopes (supports --from, --thread-id, --priority, --query)
+aim-mail inbox <my-agent-id> --state active
 
 # 2. Read and claim the message
 aim-mail read <my-agent-id> <message_id> --claim
 
-# 3a. Reply to sender's reply_to (auto-increments hop_count & auto-ACKs parent)
+# 3a. Reply to sender's reply_to (auto-increments hop_count & auto-ACKs parent; omit --wake if reply_to uses agy-desktop-sidecar)
 aim-mail reply <my-agent-id> <message_id> \
-  --body "1. AGREED: Verified 15/15 tests green. 2. NOTES: None. 3. NEXT: Promoted." \
+  --body "1. AGREED: Verified tests green. 2. NOTES: None. 3. NEXT: Promoted." \
   --ref artifacts/AUDIT_REPORT.md \
   --wake
 
@@ -160,3 +182,4 @@ Format peer reports deterministically and close the loop cleanly:
 2. **2026-07-19 (Chat-only reply):** Replying in local chat never reached the peer. Enforced target-side delivery verification (`rc=2` on `VERIFY_FAIL`).
 3. **2026-10-21 (`#17` / `#19` AGY `Escape` wipe & OS skill drift):** `Escape`→`Enter` deleted 20-line pastes on `agy 1.4.4`, shallow `-S -40` + `BODY_SNIP` caused false `VERIFY_FAIL` duplicates on `[Pasted text #1 +N lines]` chips, and divergent Windows vs. Linux `SKILL.md` overrides drifted.
 4. **2026-11-20 (`v2.0` `aim-mailbox` unification, `#24`):** Unified all OSes and harnesses under `aim-mail` (`aim-mailbox` atomic Maildir + Windows 11 Sidecar / CLI / HTTP / `tmux` drivers), retired the divergent `vessels/agy/skills/aim-communicate` override, and hardened `tmux_send.sh` to `Enter`-only submit with pre-submit composer verification and `-S -300` deep capture.
+5. **2026-11-25 (`v2.1` project-scoped `--cwd` routing & `v0.2.1` features):** Eliminated `--session-id` handoff churn via automatic `conversation_summaries.db` `--cwd` session resolution on `agy-desktop-sidecar` and `agy-cli`, documented omitting `--wake` when messaging Windows Sidecar targets from WSL2, and added `--priority`, `--coalesce-key`, `--state active`, and `install-hooks` guidance.
