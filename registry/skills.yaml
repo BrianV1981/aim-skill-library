@@ -2,13 +2,19 @@
 # type: library | companion
 # Personas (roles) live in aim-coagents/personas — not here.
 version: 1
-updated: 2026-11-20
+updated: 2026-11-26
 
 skills:
+  - id: aim-mail
+    type: library
+    description: Canonical A-Mail (amail / aim-mail) cross-OS inter-agent communication & wake dispatch via aim-mailbox
+    status: active
+    vessels: [agy, grok, opencode, codex]
+
   - id: aim-communicate
     type: library
-    description: Cross-OS inter-agent communication (v2.0) via aim-mailbox (aim-mail CLI) + Enter-only tmux fallback
-    status: active
+    description: Deprecated redirect stub to aim-mail (A-Mail); retained for one transition cycle
+    status: deprecated
     vessels: [agy, grok, opencode, codex]
 
   - id: aim-calc
@@ -118,7 +124,7 @@ companions:
 
   - id: aim-mailbox
     type: companion
-    description: Zero-daemon, zero-LLM local Maildir post office and cross-OS wake dispatcher (aim-mail CLI)
+    description: "Zero-daemon, zero-LLM local Maildir post office and cross-OS wake dispatcher (A-Mail: amail / aim-mail CLI)"
     repo: https://github.com/BrianV1981/aim-mailbox
     install: "git clone https://github.com/BrianV1981/aim-mailbox && pip install -e ./aim-mailbox"
     status: active

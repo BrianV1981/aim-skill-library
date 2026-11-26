@@ -91,7 +91,8 @@ Installed by `./scripts/install.sh` from the `skills/` tree. Pack membership is 
 
 | Skill | Role | Typical vessels |
 |-------|------|-----------------|
-| **aim-communicate** | Cross-OS inter-agent mail & dispatch (`v2.0` via `aim-mailbox` + `Enter`-only `tmux` fallback) | agy, grok, opencode, codex |
+| **aim-mail** | Canonical **A-Mail** (`amail` / `aim-mail`) cross-OS inter-agent mail & wake dispatch via `aim-mailbox` | agy, grok, opencode, codex |
+| **aim-communicate** *(deprecated)* | Transition redirect stub pointing to **aim-mail** (`amail`) | agy, grok, opencode, codex |
 | **aim-calc** | Stateful scientific calculator | agy, grok, opencode, codex |
 | **aim-memory-search** | Engram / hybrid search via `./aim` | agy, grok, opencode |
 | **aim-list-sessions** | Map / list indexed work | agy, grok, opencode |
@@ -178,11 +179,11 @@ mkdir -p "${HOME}/.gemini/antigravity-cli/skills" && ln -sfn "$(pwd)" "${HOME}/.
 |--------------|-----|
 | **aim-coagents** | DNA bank / blueprints for sovereign co-agents (equip when spawning peers) |
 
-### [aim-mailbox](https://github.com/BrianV1981/aim-mailbox) — cross-OS Maildir & wake router
+### [aim-mailbox](https://github.com/BrianV1981/aim-mailbox) — A-Mail (`amail` / `aim-mail`) cross-OS Maildir & wake router
 
 | Companion | Job |
 |-----------|-----|
-| **aim-mailbox** (`aim-mail`) | Zero-daemon, zero-LLM local Maildir post office and cross-OS wake dispatcher backing **aim-communicate** (`v2.0`) |
+| **aim-mailbox** (`amail` / `aim-mail`) | Zero-daemon, zero-LLM local Maildir post office and cross-OS wake dispatcher backing **aim-mail** (A-Mail) |
 
 ```bash
 git clone https://github.com/BrianV1981/aim-mailbox.git
@@ -267,12 +268,12 @@ Modular A.I.M. (Actual Intelligent Memory) repositories. **Flagship engine: [aim
 - **[aim-google](https://github.com/BrianV1981/aim-google)** — Google Workspace CLI (Gmail, Drive, Calendar, …).
 - **[aim-flight-recorder](https://github.com/BrianV1981/aim-flight-recorder)** — Forensic Markdown session extractor (AGY + Grok).
 - **[aim-boardroom](https://github.com/BrianV1981/aim-boardroom)** — Multi-agent orchestration room (OS multiplexing + artifacts).
-- **[aim-skill-library](https://github.com/BrianV1981/aim-skill-library)** — **This repo** — shareable **tool skills** (communicate, calc, memory, …) + companion index.
+- **[aim-skill-library](https://github.com/BrianV1981/aim-skill-library)** — **This repo** — shareable **tool skills** (A-Mail, calc, memory, …) + companion index.
 
 **DNA, comms & lore:**
 - **[aim-coagents](https://github.com/BrianV1981/aim-coagents)** — DNA bank: **personas** (roles) + **blueprints** (sovereign co-agents).
 - **[aim-knowledge](https://github.com/BrianV1981/aim-knowledge)** — Public Obsidian vault / deep-lore archive.
-- **[aim-chalkboard](https://github.com/BrianV1981/aim-chalkboard)** — Optional cross-host async git mailbox (PoC; default same-host comms = **aim-communicate** skill).
+- **[aim-mailbox](https://github.com/BrianV1981/aim-mailbox)** — **A-Mail** (`amail` / `aim-mail`): canonical cross-OS Maildir post office & wake dispatcher across Linux, WSL2, macOS, and Windows 11.
 
 **Horizon (not deprecated):**
 - **[aim-antigravity](https://github.com/BrianV1981/aim-antigravity)** — IDE-line vessel (neglected since agy CLI; still on the map).

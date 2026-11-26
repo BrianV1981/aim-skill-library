@@ -1,4 +1,5 @@
 # Install into: <project>/.opencode/skills/
+aim-mail
 aim-communicate
 aim-calc
 aim-memory-search

@@ -164,7 +164,7 @@ Only if the Operator asks you to spawn the next agent:
 5. Submit:
    - **Grok / OpenCode:** `tmux send-keys -t "$NEW" Enter` only
    - **AGY:** `Escape` then `Enter` (separate calls)
-6. Prefer `aim-communicate` / `tmux_send.sh` when messaging an *existing* peer session.
+6. Use A-Mail (`aim-mail` / `amail`) when messaging an *existing* peer session (never raw `tmux send-keys` or standalone `tmux` paste scripts).
 7. Report `tmux attach -t <new>` to Operator; witty goodbye optional.
 
 ---
