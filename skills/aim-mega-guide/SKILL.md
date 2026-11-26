@@ -17,7 +17,7 @@ description: "A highly specialized content pipeline for generating consistent, d
 ## THE PIPELINE (Execute Step-by-Step)
 
 ### Phase 1: Knowledge Extraction
-1. **The aim-youtube Agent:** Ensure you have the raw transcript for the specific long-form video/podcast. If you do not have it, use the `aim-communicate` skill to delegate the extraction to the `aim-youtube` agent, passing the target URL.
+1. **The aim-youtube Agent:** Ensure you have the raw transcript for the specific long-form video/podcast. If you do not have it, use the `aim-mail` skill (`amail` / `aim-mail`) to delegate the extraction to the `aim-youtube` agent (`--from`, `--reply-to`, `--operator-approved --wake`), passing the target URL.
 2. **Read and Synthesize:** Once the transcript is retrieved, read it entirely. Extract the core strategies, exact steps, and tactical scripts.
 
 ### Phase 2: The "Deep-Think" Structure

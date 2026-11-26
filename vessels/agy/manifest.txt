@@ -1,5 +1,6 @@
 # Install into: <project>/.gemini/skills/ or ~/.gemini/antigravity-cli/skills/
 # Core library pack — tool skills only (no personas)
+aim-mail
 aim-communicate
 aim-calc
 aim-memory-search

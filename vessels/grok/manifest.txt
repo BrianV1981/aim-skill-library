@@ -1,5 +1,6 @@
 # Install into: <project>/.grok/skills/ and/or ~/.grok/skills/
 # Core library pack — tool skills only (no personas)
+aim-mail
 aim-communicate
 aim-calc
 aim-memory-search

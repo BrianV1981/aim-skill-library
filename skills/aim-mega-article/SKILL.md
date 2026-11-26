@@ -34,7 +34,7 @@ We do not write generic SEO fluff, unverified claims, or "Meat Proxy" AI rewrite
 6. **Zero Scaled Templated Pages (Geo-Mesh Uniqueness Gate):**
    - Never publish programmatic city, county, or vertical articles using minor word swaps. Every geographic or industry playbook must feature unique local regulatory citations, distinct county/city data tables, and specific regional constraints.
 7. **Co-Agent & Subagent Delegation for Research:**
-   - **YouTube Extraction (`aim-youtube` Co-Agent via `aim-communicate`):** `aim-youtube` is a persistent Sovereign Co-Agent (the Hub/Miner), not an internal subagent. Use the `aim-communicate` skill (`scripts/tmux_send.sh`) to delegate video discovery, transcript extraction (`.vtt` -> `.txt`), and structured quote/takeaway summarization to the `aim-youtube` tmux session (`[FROM:<your_session>] [REPLY_TO:<your_session>]`), passing target URLs or topic queries so `aim-youtube` maintains its `memory-wiki/` and `content_library/`.
+   - **YouTube Extraction (`aim-youtube` Co-Agent via A-Mail / `aim-mail`):** `aim-youtube` is a persistent Sovereign Co-Agent (the Hub/Miner), not an internal subagent. Use the `aim-mail` skill (`amail send --from <your_agent> --to aim-youtube --reply-to <your_agent> --operator-approved --wake`) to delegate video discovery, transcript extraction (`.vtt` -> `.txt`), and structured quote/takeaway summarization to `aim-youtube`, passing target URLs or topic queries so `aim-youtube` maintains its `memory-wiki/` and `content_library/`.
    - **Internal Subagents (`invoke_subagent`):** Delegate image generation (`image-generator`) and multi-county statistical verification (`self`/`research`) to internal subagents so your primary context window stays sharp for writing.
 
 ---

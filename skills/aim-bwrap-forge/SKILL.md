@@ -15,7 +15,7 @@ Spawn a **bubblewrap-isolated** workspace under `~/.aim/sandboxes/`, optionally 
 a co-agent CLI inside it via **tmux**, and tear down safely when done.
 
 Works on **Grok** and **AGY** vessels. Communication with the sandbox agent uses
-`aim-communicate` (same FROM / REPLY_TO rules). Co-agent DNA lives in **aim-coagents**
+A-Mail (`aim-mail` / `amail`, same `--from` / `--reply-to` / `--operator-approved` rules). Co-agent DNA lives in **aim-coagents**
 (companion repo) — this skill does not vendor it.
 
 ## Requirements
@@ -95,11 +95,9 @@ Only start a full agent CLI inside bwrap when the Operator approves, and only wi
 binds that include that CLI’s runtime. Prefer confining a **task script** over a full
 interactive agent when isolation is the goal.
 
-## 4. Communicate
+## 4. Communicate (A-Mail)
 
-Use **`aim-communicate`**: declare FROM (your session) and REPLY_TO; paste short
-messages; verify with capture-pane / `tmux_send.sh`. Do not open open-ended multi-hop
-chat without Operator approval.
+Use **`aim-mail`** (`amail` / `aim-mail`): register the sandbox session (`amail register <sandbox-agent> --driver tmux --tmux-session "$SESSION" --cwd "$SANDBOX_ROOT/work"`), declare `--from` and `--reply-to`, pass `--operator-approved` on initial dispatches, and enforce `max_hops=1` bounded replies (`DO NOT reply` on closeout).
 
 ## 5. Tear-down
 

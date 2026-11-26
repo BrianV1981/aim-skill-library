@@ -129,7 +129,8 @@ class TestFrontmatterAndLayout(unittest.TestCase):
 
     def test_no_machine_absolute_home_paths(self):
         offenders: list[str] = []
-        for skill_dir in skill_dirs():
+        check_roots = [*skill_dirs(), VESSELS]
+        for skill_dir in check_roots:
             for path in skill_dir.rglob("*"):
                 if not path.is_file():
                     continue
@@ -142,7 +143,7 @@ class TestFrontmatterAndLayout(unittest.TestCase):
                     # Allow example placeholders that are clearly non-machine
                     if re.search(r"/home/user\b|/home/YOU\b|/Users/you\b", line, re.I):
                         continue
-                    if HOME_ABS_RE.search(line):
+                    if HOME_ABS_RE.search(line) or re.search(r"C:\\Users\\[A-Za-z0-9._-]+", line):
                         offenders.append(f"{path.relative_to(ROOT)}:{i}: {line.strip()}")
         self.assertEqual(
             offenders,
@@ -187,224 +188,56 @@ class TestDualVesselTools(unittest.TestCase):
         self.assertTrue(any(t in text for t in AGY_FILE_TOOLS))
         self.assertIsNone(HOME_ABS_RE.search(text))
 
-    def test_communicate_documents_both_skill_install_roots(self):
-        text = (SKILLS / "aim-communicate" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn(".grok/skills/aim-communicate", text)
-        self.assertIn(".gemini/skills/aim-communicate", text)
+    def test_aim_mail_documents_both_skill_install_roots_and_amail_verbs(self):
+        path = SKILLS / "aim-mail" / "SKILL.md"
+        self.assertTrue(path.is_file(), "canonical skills/aim-mail/SKILL.md required (#35)")
+        text = path.read_text(encoding="utf-8")
+        fm = parse_frontmatter(text)
+        self.assertEqual(fm.get("name"), "aim-mail")
+        self.assertIn(".grok/skills/aim-mail", text)
+        self.assertIn(".gemini/skills/aim-mail", text)
+        for required_token in (
+            "A-Mail",
+            "amail send",
+            "amail inbox",
+            "amail read",
+            "amail reply",
+            "amail ack",
+            "amail check",
+            "amail wait",
+            "install-agy-sidecar",
+            "install-hooks",
+            "--driver tmux",
+            "--operator-approved",
+            "max_hops=1",
+        ):
+            self.assertIn(required_token, text)
+        self.assertNotIn("tmux_send.sh", text)
 
-    def test_communicate_v2_unifies_mailbox_and_removes_agy_override(self):
+    def test_communicate_deprecated_redirect_and_tmux_send_retired(self):
         self.assertFalse(
             (VESSELS / "agy" / "skills" / "aim-communicate").exists(),
-            "divergent vessels/agy/skills/aim-communicate override must be removed (#17/#19/#24)",
+            "divergent vessels/agy/skills/aim-communicate override must stay removed (#17/#19/#24/#35)",
         )
-        skill_text = (SKILLS / "aim-communicate" / "SKILL.md").read_text(encoding="utf-8")
-        for required_token in (
-            "aim-mail send",
-            "aim-mail inbox",
-            "aim-mail read",
-            "aim-mail reply",
-            "aim-mail ack",
-            "install-agy-sidecar",
-        ):
-            self.assertIn(required_token, skill_text)
+        self.assertFalse(
+            (SKILLS / "aim-communicate" / "scripts" / "tmux_send.sh").exists(),
+            "legacy skills/aim-communicate/scripts/tmux_send.sh must be retired (#35)",
+        )
+        redirect_text = (SKILLS / "aim-communicate" / "SKILL.md").read_text(encoding="utf-8")
+        fm = parse_frontmatter(redirect_text)
+        self.assertEqual(fm.get("name"), "aim-communicate")
+        self.assertIn("DEPRECATED", redirect_text.upper())
+        self.assertIn("aim-mail", redirect_text)
+        self.assertIn("amail", redirect_text)
+        self.assertNotIn("tmux_send.sh", redirect_text)
 
-        helper_text = (SKILLS / "aim-communicate" / "scripts" / "tmux_send.sh").read_text(encoding="utf-8")
-        self.assertNotIn("send-keys -t \"$PANE_TARGET\" Escape", helper_text)
-        self.assertIn("-S -300", helper_text)
+        # Ensure zero active tmux_send.sh or aim-communicate.md instructions across all skills & vessel overrides
+        for md_path in [*SKILLS.rglob("SKILL.md"), *VESSELS.rglob("SKILL.md")]:
+            body = md_path.read_text(encoding="utf-8")
+            self.assertNotIn("tmux_send.sh", body, f"{md_path.relative_to(ROOT)} still references retired tmux_send.sh")
+            self.assertNotIn("aim-communicate.md", body, f"{md_path.relative_to(ROOT)} still references scratchpad aim-communicate.md")
+
         self.assertIn("aim-mailbox", (ROOT / "docs" / "COMPANIONS.md").read_text(encoding="utf-8"))
-
-    def test_tmux_send_helper_enter_only_and_paste_verification(self):
-        import os
-
-        if os.name == "nt" or not shutil.which("bash"):
-            self.skipTest("POSIX bash required for tmux_send.sh helper test")
-
-        helper = SKILLS / "aim-communicate" / "scripts" / "tmux_send.sh"
-        with tempfile.TemporaryDirectory() as tmp:
-            tdir = Path(tmp)
-            log_file = tdir / "tmux_calls.log"
-            mode_file = tdir / "mode.txt"
-            fake_tmux = tdir / "tmux"
-            fake_tmux.write_text(
-                "#!/usr/bin/env bash\n"
-                f"LOG={str(log_file)!r}\n"
-                f"MODE=$(cat {str(mode_file)!r} 2>/dev/null || echo ok)\n"
-                "echo \"$*\" >> \"$LOG\"\n"
-                "case \"$1\" in\n"
-                "  has-session) exit 0 ;;\n"
-                "  display-message) echo 'aim-joshua' ;;\n"
-                "  list-panes) echo 'agy.real' ;;\n"
-                "  set-buffer|paste-buffer|send-keys|delete-buffer) exit 0 ;;\n"
-                "  capture-pane)\n"
-                "    if [[ \"$MODE\" == \"empty_paste\" ]]; then\n"
-                "      echo 'idle prompt'\n"
-                "    elif [[ \"$MODE\" == \"stale_scrollback_fail\" ]]; then\n"
-                "      echo '[FROM:aim-joshua] [REPLY_TO:aim-joshua] old message'\n"
-                "      echo 'Thought for 3s'\n"
-                "      echo '> '\n"
-                "    elif grep -q 'send-keys' \"$LOG\"; then\n"
-                "      echo '[FROM:aim-joshua] [REPLY_TO:aim-joshua] [Pasted text #1 +20 lines]'\n"
-                "      echo 'Working...'\n"
-                "    elif grep -q 'paste-buffer' \"$LOG\"; then\n"
-                "      echo '> [Pasted text #1 +20 lines]'\n"
-                "    else\n"
-                "      echo '> '\n"
-                "    fi\n"
-                "    ;;\n"
-                "esac\n",
-                encoding="utf-8",
-            )
-            fake_tmux.chmod(0o755)
-            env = os.environ.copy()
-            env["PATH"] = f"{tdir}:{env.get('PATH', '')}"
-            env["TMPDIR"] = str(tdir)
-
-            # 1) Multi-line paste chip ([Pasted text #1 +20 lines]) -> Enter ONLY (no Escape), rc=0, 1 turn
-            mode_file.write_text("chip_ok", encoding="utf-8")
-            msg_20 = "\n".join(f"Line {i}: audit payload" for i in range(1, 21))
-            r_ok = subprocess.run(
-                ["bash", str(helper), "--target", "aim-auditor", "--from", "aim-joshua", "--message", msg_20],
-                env=env,
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(r_ok.returncode, 0, f"expected rc=0:\n{r_ok.stdout}\n{r_ok.stderr}")
-            calls = log_file.read_text(encoding="utf-8")
-            self.assertNotIn("Escape", calls)
-            self.assertEqual(calls.count("send-keys -t =aim-auditor: Enter"), 1)
-            self.assertEqual(list(tdir.glob("aim_comm_verify.*")), [])
-
-            # 2) Empty composer after paste -> PASTE_FAIL (rc=2) with zero Enter keys sent
-            log_file.unlink()
-            mode_file.write_text("empty_paste", encoding="utf-8")
-            r_fail = subprocess.run(
-                ["bash", str(helper), "--target", "aim-auditor", "--from", "aim-joshua", "--message", "ping"],
-                env=env,
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(r_fail.returncode, 2)
-            self.assertIn("PASTE_FAIL", r_fail.stderr)
-            self.assertNotIn("send-keys", log_file.read_text(encoding="utf-8"))
-
-            # 3) Stale scrollback ([FROM:aim-joshua] + Thought for 3s) with failed paste -> PASTE_FAIL (rc=2)
-            log_file.unlink()
-            mode_file.write_text("stale_scrollback_fail", encoding="utf-8")
-            r_stale = subprocess.run(
-                ["bash", str(helper), "--target", "aim-auditor", "--from", "aim-joshua", "--message", "fresh ping"],
-                env=env,
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(r_stale.returncode, 2)
-            self.assertIn("PASTE_FAIL", r_stale.stderr)
-            self.assertNotIn("send-keys", log_file.read_text(encoding="utf-8"))
-
-    def test_tmux_send_helper_real_tmux_isolation_dnd_and_no_tmp_leaks(self):
-        import os
-
-        if os.name == "nt" or not shutil.which("bash") or not shutil.which("tmux"):
-            self.skipTest("POSIX bash + tmux required for real tmux integration test")
-
-        helper = SKILLS / "aim-communicate" / "scripts" / "tmux_send.sh"
-        with tempfile.TemporaryDirectory() as tmp:
-            tdir = Path(tmp)
-            tmux_tmp = tdir / "tmux_sock"
-            tmux_tmp.mkdir(mode=0o700)
-            tmp_files = tdir / "tmp_files"
-            tmp_files.mkdir(mode=0o700)
-
-            env = os.environ.copy()
-            env.pop("TMUX", None)
-            env["TMUX_TMPDIR"] = str(tmux_tmp)
-            env["TMPDIR"] = str(tmp_files)
-
-            try:
-                subprocess.run(
-                    ["tmux", "new-session", "-d", "-s", "foo-extra", "cat"],
-                    env=env,
-                    check=True,
-                    timeout=10,
-                )
-                subprocess.run(
-                    ["tmux", "new-session", "-d", "-s", "foo", "cat"],
-                    env=env,
-                    check=True,
-                    timeout=10,
-                )
-
-                # (a) Exact session match: sending to 'foo' delivers to 'foo' and never leaks to 'foo-extra'
-                r_exact = subprocess.run(
-                    [
-                        "bash",
-                        str(helper),
-                        "--target",
-                        "foo",
-                        "--from",
-                        "sender",
-                        "--message",
-                        "--unique-exact-check-123",
-                    ],
-                    env=env,
-                    capture_output=True,
-                    text=True,
-                    timeout=15,
-                )
-                self.assertEqual(r_exact.returncode, 0, f"{r_exact.stdout}\n{r_exact.stderr}")
-                cap_extra = subprocess.run(
-                    ["tmux", "capture-pane", "-t", "=foo-extra:", "-p"],
-                    env=env,
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                self.assertNotIn("unique-exact-check-123", cap_extra.stdout)
-
-                # (b) Zero /tmp/aim_comm_* leaks
-                self.assertEqual(list(tmp_files.glob("aim_comm_*")), [])
-
-                # (c) DND session refusal + --allow-dnd override
-                env_dnd = dict(env)
-                env_dnd["AIM_DND_SESSIONS"] = "foo"
-                r_dnd_block = subprocess.run(
-                    ["bash", str(helper), "--target", "foo", "--from", "sender", "--message", "blocked"],
-                    env=env_dnd,
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                self.assertEqual(r_dnd_block.returncode, 2)
-                self.assertIn("DND_BLOCKED", r_dnd_block.stderr)
-
-                r_dnd_allow = subprocess.run(
-                    [
-                        "bash",
-                        str(helper),
-                        "--target",
-                        "foo",
-                        "--from",
-                        "sender",
-                        "--allow-dnd",
-                        "--message",
-                        "allowed override",
-                    ],
-                    env=env_dnd,
-                    capture_output=True,
-                    text=True,
-                    timeout=15,
-                )
-                self.assertEqual(r_dnd_allow.returncode, 0, f"{r_dnd_allow.stdout}\n{r_dnd_allow.stderr}")
-            finally:
-                sock_chk = subprocess.run(
-                    ["tmux", "display-message", "-p", "#{socket_path}"],
-                    env=env,
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                sock_p = sock_chk.stdout.strip()
-                if "TMUX" not in env and sock_chk.returncode == 0 and sock_p and Path(sock_p).resolve().is_relative_to(tmux_tmp.resolve()):
-                    subprocess.run(["tmux", "kill-server"], env=env, capture_output=True, timeout=10)
 
     def test_calc_documents_both_skill_install_roots(self):
         text = (SKILLS / "aim-calc" / "SKILL.md").read_text(encoding="utf-8")
