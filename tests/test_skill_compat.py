@@ -388,6 +388,81 @@ class TestInstallSmoke(unittest.TestCase):
                 self.assertEqual(rc, 0)
                 self.assertTrue((fallback_dest / "aim-memory-wiki" / "SKILL.md").is_file())
 
+    def test_opencode_install_generates_slash_command_wrappers_and_preserves_arguments(self):
+        import os
+        import sys
+
+        install_py = ROOT / "scripts" / "install.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            oc_config = Path(tmp) / ".config" / "opencode"
+            skills_dest = oc_config / "skills"
+            commands_dest = oc_config / "commands"
+
+            # Pre-seed a companion skill (e.g. aim-browser) and a user custom command to ensure
+            # companion skills get wrappers too while unrelated user commands are preserved.
+            comp_dir = skills_dest / "aim-browser"
+            comp_dir.mkdir(parents=True)
+            (comp_dir / "SKILL.md").write_text(
+                "---\nname: aim-browser\ndescription: Shared Co-Pilot Chromium CDP engine.\n---\n# Browser\n",
+                encoding="utf-8",
+            )
+            commands_dest.mkdir(parents=True)
+            (commands_dest / "my-custom.md").write_text(
+                "---\ndescription: User command\n---\nCustom $ARGUMENTS\n",
+                encoding="utf-8",
+            )
+
+            proc = subprocess.run(
+                [sys.executable, str(install_py), "--vessel", "opencode", "--dest", str(skills_dest), "--mode", "copy"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 0, f"opencode install.py failed:\n{proc.stdout}\n{proc.stderr}")
+
+            for sid in [*manifest_ids("opencode"), "aim-browser"]:
+                cmd_file = commands_dest / f"{sid}.md"
+                self.assertTrue(cmd_file.is_file(), f"missing OpenCode slash wrapper: {cmd_file}")
+                body = cmd_file.read_text(encoding="utf-8")
+                fm = parse_frontmatter(body)
+                self.assertTrue(fm.get("description"), f"{sid}.md missing description frontmatter")
+                self.assertIn(f"`{sid}`", body)
+                self.assertIn("skill", body.lower())
+                self.assertIn("$ARGUMENTS", body, f"{sid}.md must preserve literal $ARGUMENTS")
+
+            generic_aim = commands_dest / "aim.md"
+            self.assertTrue(generic_aim.is_file(), "missing generic /aim wrapper commands/aim.md")
+            self.assertIn("$ARGUMENTS", generic_aim.read_text(encoding="utf-8"))
+            self.assertTrue((commands_dest / "my-custom.md").is_file(), "unrelated user command must be preserved")
+
+            # Also verify POSIX install.sh generates the same wrappers when bash is available
+            if os.name != "nt" and shutil.which("bash"):
+                sh_root = Path(tmp) / "proj" / ".opencode"
+                sh_skills = sh_root / "skills"
+                sh_cmds = sh_root / "commands"
+                sh_proc = subprocess.run(
+                    [str(INSTALL), "--vessel", "opencode", "--dest", str(sh_skills), "--mode", "symlink"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(sh_proc.returncode, 0, f"opencode install.sh failed:\n{sh_proc.stdout}\n{sh_proc.stderr}")
+                self.assertTrue((sh_cmds / "aim-handoff.md").is_file())
+                self.assertIn("$ARGUMENTS", (sh_cmds / "aim-handoff.md").read_text(encoding="utf-8"))
+                self.assertTrue((sh_cmds / "aim.md").is_file())
+
+    def test_opencode_docs_and_manifest_unify_global_and_project_paths(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        compat = (ROOT / "docs" / "VESSEL_DUAL_COMPAT.md").read_text(encoding="utf-8")
+        manifest = (VESSELS / "opencode" / "manifest.txt").read_text(encoding="utf-8")
+
+        # Both global (~/.config/opencode/skills) and project-local (.opencode/skills) + commands/ must be documented
+        self.assertIn(".config/opencode/skills", readme)
+        self.assertIn(".opencode/skills", readme)
+        self.assertIn(".config/opencode/commands", readme)
+        self.assertIn(".config/opencode/skills", compat)
+        self.assertIn(".config/opencode/skills", manifest)
+
 
 class TestPolicyDoc(unittest.TestCase):
     def test_dual_compat_policy_exists(self):

@@ -1,4 +1,5 @@
-# Install into: <project>/.opencode/skills/
+# Install into: ~/.config/opencode/skills/ (global, recommended) or <project>/.opencode/skills/ (project-local)
+# Note: scripts/install.* also auto-generates `/` slash-command wrappers in the sibling commands/ folder.
 aim-mail
 aim-communicate
 aim-calc
