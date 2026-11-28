@@ -59,8 +59,9 @@ cd aim-skill-library
 ./scripts/install.sh --vessel agy --dest "${PROJECT_ROOT:-.}/.gemini/skills" --mode symlink
 # or AGY CLI skills: --dest "$HOME/.gemini/antigravity-cli/skills"
 
-# OpenCode
-./scripts/install.sh --vessel opencode --dest "${PROJECT_ROOT:-.}/.opencode/skills" --mode symlink
+# OpenCode (user-global XDG config — recommended across all projects; also generates ~/.config/opencode/commands/aim-*.md)
+./scripts/install.sh --vessel opencode --dest "$HOME/.config/opencode/skills" --mode symlink
+# or project-local: --dest "${PROJECT_ROOT:-.}/.opencode/skills" (also generates .opencode/commands/aim-*.md)
 
 # Codex
 ./scripts/install.sh --vessel codex --dest "${PROJECT_ROOT:-.}/.agents/skills" --mode symlink
@@ -226,8 +227,10 @@ tests/test_skill_compat.py   # portability + install smoke
 |--------|----------|---------------------|
 | **agy** | Antigravity / aim-agy | `<project>/.gemini/skills/` or `~/.gemini/antigravity-cli/skills/` |
 | **grok** | Grok CLI | `<project>/.grok/skills/` or `~/.grok/skills/` |
-| **opencode** | OpenCode | `<project>/.opencode/skills/` |
-| **codex** | Codex CLI | Greenfield vessel + overlays (subset pack) |
+| **opencode** | OpenCode | `~/.config/opencode/skills/` (global, recommended) or `<project>/.opencode/skills/` (+ sibling `commands/*.md` slash wrappers) |
+| **codex** | Codex CLI | Greenfield vessel + overlays (`~/.agents/skills/` or `<project>/.agents/skills/`) |
+
+> **OpenCode Skills vs. Slash Commands:** OpenCode loads `SKILL.md` files (`~/.config/opencode/skills/` or `.opencode/skills/`, inspectable via `opencode debug skill`) separately from `/` TUI slash commands (`~/.config/opencode/commands/*.md` or `.opencode/commands/*.md`). Running `install.sh` / `install.ps1` / `install.py` with `--vessel opencode` automatically generates thin `/aim-*` command wrappers (plus `/aim <skill-id>`) in the sibling `commands/` directory for all skills in `<dest>` so `/aim-handoff`, `/aim-memory-wiki`, `/aim-mail`, etc. work directly in OpenCode's `/` menu. Note that `~/.config/opencode/` is OpenCode's global config root (`opencode debug paths`), distinct from the `~/.opencode/` binary install directory.
 
 ---
 

@@ -20,8 +20,8 @@ See also: [issue #5](https://github.com/BrianV1981/aim-skill-library/issues/5), 
 | Vessel | Typical skills path |
 |--------|---------------------|
 | Grok | `<project>/.grok/skills/` or `~/.grok/skills/` |
-| AGY | `<project>/.gemini/skills/` |
-| OpenCode | `<project>/.opencode/skills/` |
+| AGY | `<project>/.gemini/skills/` or `~/.gemini/antigravity-cli/skills/` |
+| OpenCode | `~/.config/opencode/skills/` (global) or `<project>/.opencode/skills/` (+ auto-generated sibling `commands/*.md` slash wrappers) |
 
 Install:
 
